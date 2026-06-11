@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1VERSE | Beyond Formula 1</title>
+    <!-- TailWind CSS (Modern rich utility layer) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        f1: {
+                            red: '#FF1801',
+                            dark: '#050508',
+                            glass: 'rgba(13, 13, 23, 0.65)',
+                            gold: '#D4AF37'
+                        }
+                    },
+                    fontFamily: {
+                        f1: ['Orbitron', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Vector Icons libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- WebGL Three.js Core & Orbit Controls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-f1-dark text-gray-200 min-h-screen relative overflow-x-hidden" data-theme="ferrari">
+
+    <!-- Global HUD Overlays -->
+    <div class="cyber-grid"></div>
+    <div class="scanlines"></div>
+
+    <!-- Telemetry Incoming Radio Popup Notification -->
+    <div id="email-notification" class="fixed bottom-6 right-6 z-[1000] max-w-sm glass-panel p-4 border-l-4 border-f1-red translate-y-20 opacity-0 transition-all duration-500 pointer-events-none">
+        <div class="flex items-start gap-3">
+            <div class="p-2 bg-red-900/30 rounded-lg text-f1-red animate-pulse">
+                <i data-lucide="radio" class="w-6 h-6"></i>
+            </div>
+            <div class="flex-1">
+                <h4 class="font-f1 text-xs text-f1-red uppercase tracking-wider">TEAM RADIO TRANSMISSION</h4>
+                <p id="email-notif-title" class="font-f1 text-sm font-semibold text-white mt-1">Telemetry Enrolled</p>
+                <p id="email-notif-body" class="text-xs text-gray-400 mt-1">Checking course payload calibration parameters...</p>
+            </div>
+            <button onclick="closeNotification()" class="text-gray-500 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div class="mt-3 bg-black/40 p-2 rounded text-[10px] font-mono text-green-400 border border-green-500/10">
+            <div class="flex justify-between mb-1">
+                <span>COMMS: COMPLETED</span>
+                <span class="animate-pulse">ONLINE</span>
+            </div>
+            <div class="h-1 bg-green-500/20 rounded overflow-hidden">
+                <div class="h-full bg-green-500 w-full rounded animate-pulse"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- First Visit Experience (Ignition Sequence) -->
+    <div id="intro-screen" class="fixed inset-0 bg-black z-[2000] flex flex-col items-center justify-center transition-all duration-1000 select-none">
+        <div class="absolute inset-0 bg-radial-gradient from-red-950/20 to-black pointer-events-none"></div>
+        
+        <div class="z-10 text-center flex flex-col items-center max-w-lg px-6">
+            <h1 class="font-f1 text-5xl font-black tracking-widest text-white mb-2 text-neon-glow opacity-80">
+                F1<span class="text-f1-red">VERSE</span>
+            </h1>
+            <p class="font-f1 text-xs tracking-[0.4em] text-gray-500 uppercase mb-12">BEYOND FORMULA 1</p>
+
+            <!-- Status Indicator Panel -->
+            <div class="glass-panel w-full p-6 border border-white/5 bg-black/40 mb-8 text-left">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-f1 text-xs text-gray-500 tracking-wider">ENGINE TELEMETRY</span>
+                    <span id="system-status" class="font-f1 text-[10px] text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 animate-pulse uppercase">STANDBY</span>
+                </div>
+                <!-- Rev Counter HUD -->
+                <div class="relative w-full h-8 bg-neutral-900 border border-white/5 rounded-md overflow-hidden flex items-end p-0.5 gap-[2px]">
+                    <div class="absolute inset-0 flex justify-between px-2 py-1 pointer-events-none font-f1 text-[8px] text-gray-600">
+                        <span>0K</span>
+                        <span>3K</span>
+                        <span>6K</span>
+                        <span>9K</span>
+                        <span>12K</span>
+                        <span>15K LIMIT</span>
+                    </div>
+                    <div id="rpm-bar" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-600 w-0 transition-all duration-100 ease-out"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2 font-f1 text-xs">
+                    <span class="text-gray-400">ENGINE DYNAMICS:</span>
+                    <span id="rpm-text" class="text-white font-bold">0 RPM</span>
+                </div>
+            </div>
+
+            <!-- Race Lights CountDown -->
+            <div class="flex gap-4 mb-12 justify-center">
+                <div class="race-light w-8 h-8 rounded-full bg-zinc-900 border border-white/10 transition-all duration-300"></div>
+                <div class="race-light w-8 h-8 rounded-full bg-zinc-900 border border-white/10 transition-all duration-300"></div>
+                <div class="race-light w-8 h-8 rounded-full bg-zinc-900 border border-white/10 transition-all duration-300"></div>
+                <div class="race-light w-8 h-8 rounded-full bg-zinc-900 border border-white/10 transition-all duration-300"></div>
+                <div class="race-light w-8 h-8 rounded-full bg-zinc-900 border border-white/10 transition-all duration-300"></div>
+            </div>
+
+            <button id="ignition-btn" class="glass-button text-base px-10 py-4 border-2 border-f1-red/30 hover:border-f1-red bg-f1-red/10 text-white font-bold tracking-widest relative group overflow-hidden">
+                <span class="relative z-10 flex items-center gap-3">
+                    <i data-lucide="power" class="w-5 h-5 text-f1-red group-hover:text-white animate-pulse"></i>
+                    START ENGINE
+                </span>
+                <span class="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+            </button>
+        </div>
+
+        <div id="car-flyby" class="absolute bottom-10 left-[-100%] w-[400px] h-[100px] pointer-events-none transition-all duration-[600ms] ease-in-out z-30 opacity-0 filter blur-xs">
+            <svg viewBox="0 0 100 40" class="w-full h-full fill-f1-red drop-shadow-[0_0_15px_var(--primary-glow)]">
+                <path d="M5 25 L15 25 L18 20 L25 20 L30 24 L55 24 L62 12 L70 12 L75 22 L90 22 L95 18 L98 25 L92 27 L70 27 L66 30 L50 30 L46 27 L15 27 Z"></path>
+                <circle cx="28" cy="28" r="7" class="fill-neutral-900 stroke-f1-red stroke-2"></circle>
+                <circle cx="82" cy="28" r="7" class="fill-neutral-900 stroke-f1-red stroke-2"></circle>
+                <line x1="0" y1="28" x2="15" y2="28" stroke="red" stroke-width="2" stroke-dasharray="2,2"></line>
+            </svg>
+        </div>
+        <h2 id="cinematic-msg" class="absolute font-f1 text-4xl sm:text-6xl font-black text-white tracking-widest uppercase opacity-0 pointer-events-none scale-50 transition-all duration-300 z-50"></h2>
+    </div>
+
+    <!-- Authentic Navigation Cockpit -->
+    <nav class="sticky top-0 w-full z-50 glass-panel border-x-0 border-t-0 border-b border-white/5 rounded-none px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-8">
+            <a href="#" onclick="navigateTo('home')" class="font-f1 text-2xl font-black tracking-wider text-white hover:opacity-85 flex items-center gap-2">
+                F1<span class="text-f1-red">VERSE</span>
+            </a>
+            <!-- Nav Links -->
+            <div class="hidden lg:flex items-center gap-5 font-f1 text-[10px] uppercase tracking-widest text-gray-400">
+                <a href="#" onclick="navigateTo('home')" class="nav-link hover:text-white transition-colors py-1 relative">Home</a>
+                <a href="#" onclick="navigateTo('about')" class="nav-link hover:text-white transition-colors py-1 relative">About</a>
+                <a href="#" onclick="navigateTo('services')" class="nav-link hover:text-white transition-colors py-1 relative">Services</a>
+                <a href="#" onclick="navigateTo('contact')" class="nav-link hover:text-white transition-colors py-1 relative">Contact</a>
+                <span class="w-[1px] h-4 bg-white/10"></span>
+                <a href="#" onclick="navigateTo('garage')" class="nav-link hover:text-white transition-colors py-1 relative text-f1-red font-semibold"><i class="fa-solid fa-car-side mr-1"></i> Garage</a>
+                <a href="#" onclick="navigateTo('academy')" class="nav-link hover:text-white transition-colors py-1 relative text-f1-gold font-semibold"><i class="fa-solid fa-graduation-cap mr-1"></i> Academy</a>
+                <a href="#" onclick="navigateTo('tracks')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-map mr-1"></i> Tracks</a>
+                <a href="#" onclick="navigateTo('museum')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-building-columns mr-1"></i> Museum</a>
+                <a href="#" onclick="navigateTo('fantasy')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-trophy mr-1"></i> Fantasy</a>
+                <a href="#" onclick="navigateTo('ai')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-brain mr-1"></i> AI Hub</a>
+                <a href="#" onclick="navigateTo('shop')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-shopping-bag mr-1"></i> Shop</a>
+                <a href="#" onclick="navigateTo('sponsors')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-handshake mr-1"></i> Sponsors</a>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Sound profile & Mute Selectors -->
+            <div class="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5 text-xs">
+                <select id="sound-profile-select" onchange="changeSoundProfile(this.value)" class="bg-transparent border-none text-gray-400 font-f1 text-[9px] outline-none cursor-pointer">
+                    <option value="aggressive">Aggressive Engine</option>
+                    <option value="stealth">Stealth Electric</option>
+                    <option value="cinematic">Cinematic V10</option>
+                </select>
+                <button onclick="toggleSound()" class="text-gray-400 hover:text-white ml-2">
+                    <i id="volume-icon" data-lucide="volume-2" class="w-4 h-4"></i>
+                </button>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5" class="w-12 h-1 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-f1-red">
+            </div>
+
+            <!-- Team Color Active Theme Selector -->
+            <div class="flex items-center gap-1.5 bg-black/40 border border-white/5 p-1 rounded-lg">
+                <button onclick="changeTheme('ferrari')" class="w-4 h-4 rounded-full bg-[#E00000] border border-white/20 hover:scale-110 transition-transform" title="Ferrari Passion"></button>
+                <button onclick="changeTheme('mercedes')" class="w-4 h-4 rounded-full bg-[#00A19B] border border-white/20 hover:scale-110 transition-transform" title="Mercedes Precision"></button>
+                <button onclick="changeTheme('mclaren')" class="w-4 h-4 rounded-full bg-[#FF8700] border border-white/20 hover:scale-110 transition-transform" title="McLaren Speed"></button>
+                <button onclick="changeTheme('redbull')" class="w-4 h-4 rounded-full bg-[#001830] border border-white/20 hover:scale-110 transition-transform" title="Red Bull Aggression"></button>
+            </div>
+
+            <!-- User profile state -->
+            <div id="auth-buttons" class="flex items-center gap-3">
+                <button onclick="openAuthModal('login')" class="glass-button text-[9px] px-3 py-1.5 border border-white/10 bg-transparent">Login</button>
+                <button onclick="openAuthModal('signup')" class="glass-button text-[9px] px-3 py-1.5 bg-f1-red hover:bg-red-600 border border-f1-red">Register</button>
+            </div>
+            
+            <div id="user-profile-badge" class="hidden flex items-center gap-3">
+                <div class="flex flex-col text-right">
+                    <span id="user-badge-name" class="font-f1 text-[11px] font-semibold text-white">Driver #44</span>
+                    <span id="user-badge-xp" class="text-[8px] text-f1-gold tracking-wider font-mono">100 XP (Rookie)</span>
+                </div>
+                <!-- Profile Frame Badge Container -->
+                <div id="user-badge-avatar-container" class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center bg-f1-red/10 cursor-pointer overflow-hidden relative" onclick="navigateTo('academy')">
+                    <img id="user-badge-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" class="w-full h-full object-cover">
+                </div>
+                <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors" title="Log Out Pit Wall">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Pit Wall Administration Trigger -->
+            <button id="admin-nav-btn" onclick="navigateTo('admin')" class="hidden glass-button text-[9px] px-3 py-1.5 bg-blue-600 hover:bg-blue-700 border border-blue-500 font-f1 tracking-wider">
+                <i data-lucide="sliders" class="w-3.5 h-3.5 mr-1"></i> PIT WALL
+            </button>
+        </div>
+    </nav>
+
+    <!-- Content Sections -->
+    <main class="relative min-h-[calc(100vh-80px)] w-full py-8 px-6 max-w-7xl mx-auto overflow-hidden">
+        
+        <!-- ================= HOME PAGE ================= -->
+        <div id="page-home" class="page-container active-page space-y-12">
+            <!-- Cinematic full-screen hero -->
+            <div class="relative rounded-2xl overflow-hidden min-h-[420px] flex items-center p-8 border border-white/5 bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,5,8,0.95) 40%, rgba(5,5,8,0.3) 100%), url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=1200');">
+                <div class="max-w-xl space-y-6 relative z-10">
+                    <div class="inline-flex items-center gap-2 bg-f1-red/10 border border-f1-red/20 text-f1-red px-3 py-1 rounded-full font-f1 text-[10px] tracking-wider uppercase animate-pulse">
+                        <i data-lucide="activity" class="w-3 h-3"></i> LIVE GP OPERATIONS ACTIVE
+                    </div>
+                    <h2 class="font-f1 text-5xl font-black leading-tight tracking-wider text-white">
+                        THE ULTIMATE <br>
+                        <span class="text-f1-red text-neon-glow">F1VERSE DIGITAL HUBS</span>
+                    </h2>
+                    <p class="text-gray-400 text-xs leading-relaxed">
+                        Step inside the carbon fiber simulator. Sign elite sponsor contracts, explore 3D aerodynamics, buy glowing visual frames, recalculate seasons with AI, and track your metrics.
+                    </p>
+                    <div class="flex gap-4">
+                        <button onclick="navigateTo('academy')" class="glass-button px-6 py-2.5 bg-f1-red border border-f1-red text-[10px]">Driver Academy</button>
+                        <button onclick="navigateTo('garage')" class="glass-button px-6 py-2.5 bg-transparent border border-white/10 hover:border-white text-[10px]">3D F1 Garage</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GP Countdown & Standing charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- GP Countdown -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-t-4 border-f1-red space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="telemetry-label">NEXT ROUND CALENDAR</span>
+                            <h3 class="font-f1 text-base font-bold mt-1 text-white">MONACO GRAND PRIX</h3>
+                        </div>
+                        <i data-lucide="calendar" class="w-5 h-5 text-f1-red"></i>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                            <span id="days" class="font-f1 text-xl font-black text-white">03</span>
+                            <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">DAYS</div>
+                        </div>
+                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                            <span id="hours" class="font-f1 text-xl font-black text-white">12</span>
+                            <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">HRS</div>
+                        </div>
+                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                            <span id="minutes" class="font-f1 text-xl font-black text-white">45</span>
+                            <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">MINS</div>
+                        </div>
+                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                            <span id="seconds" class="font-f1 text-xl font-black text-white">20</span>
+                            <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">SECS</div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="navigateTo('tracks')" class="glass-button w-full text-[10px] py-2">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1"></i> CIRCUIT EXPLORER
+                    </button>
+                </div>
+
+                <!-- Championship Battle Chart -->
+                <div class="glass-panel p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="telemetry-label">LIVE CHAMPIONSHIP TELEMETRY</span>
+                            <h3 class="font-f1 text-xs font-semibold mt-1 text-white text-neon-glow">Hamilton vs Verstappen vs Leclerc</h3>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-[9px] text-gray-400 flex items-center gap-1"><span class="w-2 h-2 bg-f1-red rounded-full"></span> HAM</span>
+                            <span class="text-[9px] text-gray-400 flex items-center gap-1"><span class="w-2 h-2 bg-[#FFEC00] rounded-full"></span> VER</span>
+                            <span class="text-[9px] text-gray-400 flex items-center gap-1"><span class="w-2 h-2 bg-[#00A19B] rounded-full"></span> LEC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="relative w-full h-32">
+                        <canvas id="standing-chart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Roster & Interactive Social Comments Feed -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Driver Grid -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-f1 text-lg font-bold border-l-4 border-f1-red pl-3 text-white">FEATURED GRID DRIVERS</h3>
+                        <button onclick="triggerSeasonWrapped()" class="glass-button text-[9px] bg-f1-gold/10 border-f1-gold text-f1-gold font-bold">
+                            <i data-lucide="film" class="w-3.5 h-3.5 mr-1"></i> SEASON WRAPPED STORY
+                        </button>
+                    </div>
+                    
+                    <div id="home-drivers-flex" class="flex flex-wrap gap-4 justify-start">
+                        <!-- Loaded dynamically inside app.js -->
+                    </div>
+                </div>
+
+                <!-- Social activity and reactions panel -->
+                <div class="space-y-6">
+                    <h3 class="font-f1 text-lg font-bold border-l-4 border-f1-red pl-3 text-white uppercase">COMMUNITY GRID FEED</h3>
+                    
+                    <div class="glass-panel p-4 space-y-4">
+                        <div class="max-h-56 overflow-y-auto space-y-3" id="social-feed-container">
+                            <!-- Standard starting comments -->
+                            <div class="bg-black/30 p-2.5 rounded border border-white/5 text-xs">
+                                <div class="flex justify-between font-f1 text-[10px] text-gray-400">
+                                    <span>Driver#3204</span>
+                                    <span>Just now</span>
+                                </div>
+                                <p class="text-gray-200 mt-1">That Web Audio engine rev vibration is literally INSANE. Sounds like a V10! 🏎️💨</p>
+                            </div>
+                        </div>
+
+                        <!-- Add comments interface -->
+                        <form onsubmit="handleSocialComment(event)" class="flex gap-2">
+                            <input type="text" id="social-input" placeholder="Type radio logs..." required class="bg-black/50 border border-white/10 px-3 py-1.5 rounded text-xs font-f1 outline-none focus:border-f1-red flex-1 text-white">
+                            <button type="submit" class="glass-button text-[10px] px-3 bg-f1-red border-f1-red">SEND</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ABOUT PAGE ================= -->
+        <div id="page-about" class="page-container space-y-8">
+            <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">ABOUT F1VERSE</h2>
+            <p class="text-gray-400 text-xs max-w-3xl leading-relaxed">
+                F1VERSE Driver Academy was established to close the gap between virtual simulator racing and real-world high-performance motorsport telemetry. We recruit aspiring drivers, provide structured engineering modules, and track qualifying licenses using authentic data sets.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                <div class="glass-panel p-6 space-y-3">
+                    <div class="p-3 bg-red-900/10 text-f1-red w-fit rounded-lg">
+                        <i data-lucide="cpu" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-f1 font-semibold text-white">Advanced Simulation</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">High-performance mechanical physics engines running synchronized custom telemetry diagnostics at 120 FPS.</p>
+                </div>
+                <div class="glass-panel p-6 space-y-3">
+                    <div class="p-3 bg-f1-gold/10 text-f1-gold w-fit rounded-lg">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-f1 font-semibold text-white">Licensed Progression</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">Earn driver XP, unlock career tiers from Strategist to Legend, and accumulate authenticated certificates.</p>
+                </div>
+                <div class="glass-panel p-6 space-y-3">
+                    <div class="p-3 bg-blue-900/10 text-blue-400 w-fit rounded-lg">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-f1 font-semibold text-white">Secure Transactions</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">Test payments secured through mock standard Razorpay integration sequences to ensure zero real-world risk.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SERVICES PAGE ================= -->
+        <div id="page-services" class="page-container space-y-8">
+            <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">ACADEMY SERVICES</h2>
+            <p class="text-gray-400 text-xs max-w-3xl leading-relaxed">
+                Unlock professional coaching programs, simulator access slots, dynamic telemetry setups, and elite constructor garage design customization options.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <!-- Service 1 -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-l-4 border-f1-red">
+                    <div class="space-y-3">
+                        <h3 class="font-f1 text-sm font-bold text-white uppercase">Wind Tunnel Aerodynamic Calibration</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed">We provide premium structural telemetry files to configure downforce ratios and DRS flap activations based on dynamic track temperatures.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="font-f1 font-black text-f1-red text-sm">$49 / SESSION</span>
+                        <button onclick="navigateTo('academy')" class="glass-button text-[9px] py-1.5 px-4">VIEW TELEMETRY COURSE</button>
+                    </div>
+                </div>
+
+                <!-- Service 2 -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-l-4 border-f1-gold">
+                    <div class="space-y-3">
+                        <h3 class="font-f1 text-sm font-bold text-white uppercase">Licensed Sim Tutoring Tiers</h3>
+                        <p class="text-xs text-gray-400 leading-relaxed">Access physical rig calibration slots, one-on-one telemetry reviews with Formula 1 simulation engineers, and fast-track FIA Grade license modules.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="font-f1 font-black text-f1-gold text-sm">$99 / WEEK</span>
+                        <button onclick="navigateTo('academy')" class="glass-button text-[9px] py-1.5 px-4">BOOK RIG SLOT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CONTACT PAGE ================= -->
+        <div id="page-contact" class="page-container space-y-8">
+            <div class="max-w-xl mx-auto glass-panel p-8">
+                <h2 class="font-f1 text-xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider mb-6">SUBMIT SIMULATOR INQUIRY</h2>
+                
+                <form id="contact-form" onsubmit="handleContactSubmit(event)" class="space-y-6">
+                    <div class="hud-input-group">
+                        <input type="text" id="contact-name" class="hud-input" required>
+                        <label class="hud-label">DRIVER IDENTIFICATION</label>
+                    </div>
+                    <div class="hud-input-group">
+                        <input type="email" id="contact-email" class="hud-input" required>
+                        <label class="hud-label">TELEMETRY COMMS EMAIL</label>
+                    </div>
+                    <div class="hud-input-group">
+                        <textarea id="contact-msg" rows="4" class="hud-input resize-none" required></textarea>
+                        <label class="hud-label">MESSAGE DATA PAYLOAD</label>
+                    </div>
+
+                    <button type="submit" class="glass-button w-full py-3 bg-f1-red border-f1-red text-[10px] font-bold tracking-widest uppercase">
+                        TRANSMIT PAYLOAD <i data-lucide="send" class="w-3.5 h-3.5 ml-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ================= 3D GARAGE PAGE ================= -->
+        <div id="page-garage" class="page-container space-y-8">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">F1 DEVELOPMENT LAB & GARAGE</h2>
+                    <p class="text-[10px] text-gray-400 mt-1">Stark R&D Facility - Volumetric Diagnostic & Telemetry Node</p>
+                </div>
+                <div class="flex gap-2 bg-black/40 border border-white/5 p-1 rounded-lg">
+                    <!-- Tab switches between Garage and R&D Lab -->
+                    <button id="tab-garage-btn" onclick="switchGarageTab('showroom')" class="glass-button text-[9px] px-4 py-1.5 bg-f1-red border-f1-red text-white">SHOWROOM</button>
+                    <button id="tab-comparison-btn" onclick="switchGarageTab('compare')" class="glass-button text-[9px] px-4 py-1.5 bg-transparent border-none">COMPARISON CHAMBER</button>
+                    <button id="tab-lab-btn" onclick="switchGarageTab('lab')" class="glass-button text-[9px] px-4 py-1.5 bg-transparent border-none">R&D LAB</button>
+                </div>
+            </div>
+
+            <!-- TAB 1: THE SHOWROOM & TONY STARK WORKSHOP -->
+            <div id="garage-tab-showroom" class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- 3D WebGL Canvas Chamber -->
+                <div id="garage-viewer-container" class="lg:col-span-3 glass-panel p-4 h-[480px] relative overflow-hidden bg-black border-2 border-white/5 flex items-center justify-center">
+                    
+                    <!-- Shutter Doors -->
+                    <div id="shutter-top" class="shutter-door-top flex items-end justify-center pb-2"><span class="font-f1 text-[10px] text-gray-600 tracking-[0.3em]">SHUTTER DEPLOYED</span></div>
+                    <div id="shutter-bottom" class="shutter-door-bottom flex items-start justify-center pt-2"><span class="font-f1 text-[10px] text-gray-600 tracking-[0.3em]">SECURE LAB DOCK</span></div>
+                    
+                    <!-- Laser scanning horizontal line -->
+                    <div id="laser-scanner" class="laser-scanner-line hidden"></div>
+                    <!-- Volumetric spotlight cones -->
+                    <div id="volumetric-light" class="volumetric-cone"></div>
+                    <!-- Neon Floor Grid Reflection -->
+                    <div class="absolute inset-x-0 bottom-0 h-1/3 neon-floor-grid pointer-events-none"></div>
+                    <!-- Smoke / Fog particles container -->
+                    <div id="fog-container" class="absolute inset-0 z-20 pointer-events-none overflow-hidden"></div>
+
+                    <!-- Ambient grid scan details -->
+                    <div class="absolute top-4 left-4 z-10 font-f1 text-[9px] text-green-400 border border-green-500/20 px-2 py-0.5 rounded bg-green-500/5 animate-pulse uppercase">
+                        LAB ENGINE SCANNER: ACTIVE
+                    </div>
+
+                    <!-- Interactive WebGL Canvas -->
+                    <canvas id="garage-canvas" class="w-full h-full cursor-grab active:cursor-grabbing relative z-0"></canvas>
+
+                    <!-- Interactive Exploded Component Overlay Details Panel -->
+                    <div id="exploded-part-card" class="exploded-details-panel glass-panel p-4 rounded-lg hidden text-left">
+                        <div class="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+                            <h4 id="part-title" class="font-f1 text-xs font-bold text-white uppercase">FRONT WING</h4>
+                            <button onclick="closePartDetails()" class="text-gray-500 hover:text-white"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <p id="part-desc" class="text-[10px] text-gray-400 leading-relaxed">Aerodynamic assembly providing 40% total downforce payload. Current active angle: 14.2°.</p>
+                    </div>
+
+                    <!-- 3D Floating Holographic HUD Panels -->
+                    <div class="holo-card-hud top-12 right-4 text-left" id="hud-panel-power">
+                        <span class="telemetry-label text-[8px] text-f1-gold">POWER METRICS</span>
+                        <div class="text-white font-bold text-xs mt-1" id="hud-hp-out">1020 HP</div>
+                    </div>
+                    <div class="holo-card-hud bottom-24 right-4 text-left" id="hud-panel-aero">
+                        <span class="telemetry-label text-[8px] text-[#00fff9]">DRAG EFFICIENCY</span>
+                        <div class="text-green-400 font-bold text-xs mt-1" id="hud-aero-out">96% EFF</div>
+                    </div>
+
+                    <!-- Controls Modes Dock -->
+                    <div class="absolute bottom-4 left-4 right-4 flex justify-between gap-4 pointer-events-none z-20">
+                        <div class="flex gap-2 pointer-events-auto">
+                            <button onclick="setGarageViewMode('real')" id="btn-mode-real" class="glass-button text-[9px] py-1.5 px-3 bg-f1-red border-f1-red text-white" title="Realistic Metal PBR">PBR REAL</button>
+                            <button onclick="setGarageViewMode('hologram')" id="btn-mode-holo" class="glass-button text-[9px] py-1.5 px-3" title="Neon Blue Scanning Hologram">HOLOGRAM</button>
+                            <button onclick="setGarageViewMode('aero')" id="btn-mode-aero" class="glass-button text-[9px] py-1.5 px-3" title="Real-Time Wind Tunnel Flow"><i data-lucide="wind" class="w-3.5 h-3.5 mr-1 text-blue-400"></i>AERO</button>
+                            <button onclick="setGarageViewMode('exploded')" id="btn-mode-exploded" class="glass-button text-[9px] py-1.5 px-3" title="Separate Chassis Components">EXPLODED</button>
+                            <button onclick="setGarageViewMode('xray')" id="btn-mode-xray" class="glass-button text-[9px] py-1.5 px-3" title="Glowing Internal Assemblies">X-RAY</button>
+                        </div>
+                        <button onclick="triggerShowroomCinematic()" class="glass-button text-[9px] py-1.5 px-3 bg-f1-gold text-black border-f1-gold pointer-events-auto">
+                            <i data-lucide="film" class="w-3.5 h-3.5 mr-1"></i> REVEAL CINEMATIC
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Garage Right Inspector Config Panel -->
+                <div class="glass-panel p-6 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <span class="telemetry-label">VEHICLE DIAGNOSTIC</span>
+                        <h3 id="garage-car-name" class="font-f1 text-lg font-black text-white">RED BULL RB19</h3>
+                        
+                        <div class="space-y-2.5 text-xs border-y border-white/5 py-4">
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-400">Power Unit:</span>
+                                <span id="car-detail-pu" class="font-f1 text-white">Honda RBPTH001</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-400">Chassis Code:</span>
+                                <span id="car-detail-chassis" class="font-f1 text-white">RB19-M01</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-400">Top Speed:</span>
+                                <span id="car-detail-speed" class="font-f1 text-white">340 km/h</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-400">Aerodynamics:</span>
+                                <span id="car-detail-reliability" class="font-f1 text-white">Venturi floor</span>
+                            </div>
+                        </div>
+
+                        <!-- Car Selector -->
+                        <div class="hud-input-group mt-6">
+                            <select id="car-select" onchange="triggerCarReveal(this.value)" class="hud-input bg-f1-dark text-white font-f1 text-xs">
+                                <option value="redbull">Red Bull Racing RB19</option>
+                                <option value="ferrari">Ferrari SF-23</option>
+                                <option value="mercedes">Mercedes W14</option>
+                                <option value="mclaren">McLaren MCL60</option>
+                            </select>
+                            <label class="hud-label">SELECT TELEMETRY FRAME</label>
+                        </div>
+                    </div>
+
+                    <!-- Decals & Skins -->
+                    <div class="space-y-3">
+                        <span class="telemetry-label">SPONSOR DECALS ACTIVE</span>
+                        <div id="unlocked-decals-list" class="flex gap-2 flex-wrap">
+                            <span class="text-[10px] text-gray-500 bg-neutral-900 border border-white/5 px-2.5 py-1 rounded">No sponsor active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: CAR COMPARISON CHAMBER -->
+            <div id="garage-tab-compare" class="hidden grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Dual WebGL Viewport Container -->
+                <div class="lg:col-span-3 glass-panel p-4 h-[420px] bg-black border-2 border-white/5 flex items-center justify-center relative">
+                    <div class="absolute inset-0 bg-radial-gradient from-transparent to-black pointer-events-none z-10"></div>
+                    <canvas id="comparison-canvas" class="w-full h-full cursor-grab active:cursor-grabbing relative z-0"></canvas>
+                    
+                    <!-- Display modes overlay inside comparison chamber -->
+                    <div class="absolute bottom-4 left-4 z-20 flex gap-2">
+                        <button onclick="setCompareMaterial('real')" id="btn-comp-real" class="glass-button text-[9px] py-1 px-3 bg-f1-red border-f1-red text-white">REAL MODEL</button>
+                        <button onclick="setCompareMaterial('holo')" id="btn-comp-holo" class="glass-button text-[9px] py-1 px-3">HOLOGRAM</button>
+                        <button onclick="setCompareMaterial('wire')" id="btn-comp-wire" class="glass-button text-[9px] py-1 px-3">WIRE FRAME</button>
+                    </div>
+                </div>
+
+                <!-- Comparison Specs Side Grid -->
+                <div class="glass-panel p-6 flex flex-col justify-between space-y-6">
+                    <div class="space-y-4">
+                        <span class="telemetry-label font-bold text-f1-gold">COMPARISON SPECS</span>
+                        
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <select id="compare-select-1" onchange="runCarComparison()" class="hud-input bg-f1-dark text-white font-f1 text-[9px] py-1.5 mb-0">
+                                <option value="redbull">Red Bull RB19</option>
+                                <option value="ferrari" selected>Ferrari SF-23</option>
+                                <option value="mercedes">Mercedes W14</option>
+                                <option value="mclaren">McLaren MCL60</option>
+                            </select>
+                            <select id="compare-select-2" onchange="runCarComparison()" class="hud-input bg-f1-dark text-white font-f1 text-[9px] py-1.5 mb-0">
+                                <option value="redbull">Red Bull RB19</option>
+                                <option value="ferrari">Ferrari SF-23</option>
+                                <option value="mercedes" selected>Mercedes W14</option>
+                                <option value="mclaren">McLaren MCL60</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Visual Spec comparison bars -->
+                        <div class="space-y-4 pt-4 border-t border-white/5 text-[10px]">
+                            <div class="space-y-1">
+                                <div class="flex justify-between font-f1"><span>Horsepower</span><span id="comp-hp-txt">1030 vs 1015 HP</span></div>
+                                <div class="comparison-stat-bar"><div id="comp-hp-fill" class="comparison-stat-fill" style="width: 50%"></div></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between font-f1"><span>Aerodynamics</span><span id="comp-aero-txt">94% vs 95%</span></div>
+                                <div class="comparison-stat-bar"><div id="comp-aero-fill" class="comparison-stat-fill" style="width: 50%"></div></div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between font-f1"><span>Top Speed</span><span id="comp-speed-txt">348 vs 342 km/h</span></div>
+                                <div class="comparison-stat-bar"><div id="comp-speed-fill" class="comparison-stat-fill" style="width: 50%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-[9px] font-mono text-gray-500 uppercase text-center">
+                        Dual Diagnostics split loop
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: F1 DEVELOPMENT LAB & HISTORICAL TIMELINE -->
+            <div id="page-rd-lab" class="hidden glass-panel p-6 space-y-6">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                        <span class="telemetry-label font-bold text-f1-gold">HISTORICAL EVOLUTION PROCESSOR</span>
+                        <h3 class="font-f1 text-lg font-black text-white uppercase mt-1">Rule Changes & Shape Timelines</h3>
+                    </div>
+                </div>
+
+                <!-- WebGL Evolution Scene Viewer -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 glass-panel p-4 h-[350px] relative overflow-hidden bg-black border border-white/5 flex items-center justify-center">
+                        <canvas id="rd-lab-canvas" class="w-full h-full cursor-grab active:cursor-grabbing relative z-0"></canvas>
+                        <div class="absolute top-4 left-4 z-10 font-f1 text-[9px] text-[#00fff9] border border-[#00fff9]/20 px-2 py-0.5 rounded bg-[#00fff9]/5 animate-pulse uppercase">
+                            Morphing Chassis Mode: ACTIVE
+                        </div>
+                    </div>
+
+                    <!-- Timeline selector and specs box -->
+                    <div class="glass-panel p-6 flex flex-col justify-between space-y-4">
+                        <div class="space-y-4">
+                            <span class="telemetry-label">Select Rule Era</span>
+                            <div class="rd-timeline-nav">
+                                <div onclick="selectLabEra(1950)" id="rd-node-1950" class="rd-timeline-node active-node">1950</div>
+                                <div onclick="selectLabEra(1970)" id="rd-node-1970" class="rd-timeline-node">1970</div>
+                                <div onclick="selectLabEra(1990)" id="rd-node-1990" class="rd-timeline-node">1990</div>
+                                <div onclick="selectLabEra(2010)" id="rd-node-2010" class="rd-timeline-node">2010</div>
+                                <div onclick="selectLabEra(2026)" id="rd-node-2026" class="rd-timeline-node">2026</div>
+                            </div>
+
+                            <div class="space-y-2 pt-2 text-xs">
+                                <h4 id="lab-era-title" class="font-f1 font-bold text-white text-neon-glow uppercase">1950s: Cigar & Spoke wheels</h4>
+                                <p id="lab-era-desc" class="text-gray-400 leading-relaxed text-[11px]">Simple cylinder chassis monocoques, narrow spoke wheels, and absolutely zero aerodynamic downforce structures.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-black/40 p-3 rounded border border-white/5 text-[10px] text-gray-500 flex justify-between font-mono">
+                            <span>ERA CODE: <span id="lab-era-code" class="text-white">F1-50S</span></span>
+                            <span>Aero: <span id="lab-era-aero" class="text-white">None</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= TRACK EXPLORER PAGE ================= -->
+        <div id="page-tracks" class="page-container space-y-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">TRACK EXPLORER</h2>
+                    <p class="text-[10px] text-gray-400 mt-1">Interactive vector circuit diagrams and G-Force telemetry profiles</p>
+                </div>
+                <div class="hud-input-group mb-0">
+                    <select id="track-select" onchange="selectTrack(this.value)" class="hud-input bg-f1-dark text-white font-f1 text-xs py-2">
+                        <option value="monaco">Monaco GP (Monte Carlo)</option>
+                        <option value="silverstone">Silverstone (United Kingdom)</option>
+                        <option value="monza">Monza GP (Temple of Speed)</option>
+                    </select>
+                    <label class="hud-label">ACTIVE CIRCUIT FRAME</label>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Track Render Viewport -->
+                <div class="lg:col-span-2 glass-panel p-6 h-[400px] flex items-center justify-center relative bg-black/80">
+                    <div class="absolute top-4 left-4 z-10 font-f1 text-[9px] text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded bg-blue-500/5 animate-pulse uppercase">
+                        3D Circuit Flyover: SIMULATING
+                    </div>
+                    <canvas id="track-flyover-canvas" class="w-full h-full"></canvas>
+                </div>
+
+                <!-- Track parameters metadata -->
+                <div class="glass-panel p-6 flex flex-col justify-between space-y-6 h-fit border-t-4 border-f1-red">
+                    <div class="space-y-4">
+                        <span class="telemetry-label">Circuit Specifications</span>
+                        <h3 id="track-meta-title" class="font-f1 text-lg font-bold text-white">Circuit de Monaco</h3>
+                        <p id="track-meta-desc" class="text-xs text-gray-400 leading-relaxed">Narrow street track featuring sharp corners, close barriers, and extreme qualifying performance weights.</p>
+                        
+                        <div class="space-y-2 text-xs border-t border-white/5 pt-4">
+                            <div class="flex justify-between"><span>Number of Corners:</span><span id="track-corners" class="text-white font-semibold">19 Corners</span></div>
+                            <div class="flex justify-between"><span>Lap Record Time:</span><span id="track-laprecord" class="text-f1-red font-mono font-bold">1:12.909 (Hamilton)</span></div>
+                            <div class="flex justify-between"><span>DRS Zones:</span><span id="track-drs" class="text-white font-semibold">1 Zone</span></div>
+                            <div class="flex justify-between"><span>Elevation Deviation:</span><span id="track-elevation" class="text-white font-semibold">42 Meters</span></div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="playRadioBeep()" class="glass-button w-full py-2.5 text-xs"><i data-lucide="play" class="w-4 h-4 mr-1"></i> SIMULATE FLYOVER TRACK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= F1 MUSEUM PAGE ================= -->
+        <div id="page-museum" class="page-container space-y-8">
+            <div>
+                <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">F1 RETROSPECTIVE MUSEUM</h2>
+                <p class="text-[10px] text-gray-400 mt-1">Explore historical motorsport frames and legendary driver achievements</p>
+            </div>
+
+            <!-- Carousel grid cards representing historic timelines -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="glass-panel p-6 space-y-4 border-t-2 border-red-600">
+                    <div class="flex justify-between items-start">
+                        <span class="font-f1 text-xs text-red-600 font-bold">2004 V10 ERA</span>
+                        <i class="fa-solid fa-clock-rotate-left text-gray-500"></i>
+                    </div>
+                    <h4 class="font-f1 text-base font-black text-white">Ferrari F2004</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">Powered by the iconic 3.0L V10 screaming engine. Secured 15 victories under Michael Schumacher's legendary drivership.</p>
+                    <div class="bg-black/30 p-2 rounded text-[10px] text-gray-500 flex justify-between font-mono">
+                        <span>Championship: YES</span>
+                        <span>Power: 950 HP</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="glass-panel p-6 space-y-4 border-t-2 border-[#FF8700]">
+                    <div class="flex justify-between items-start">
+                        <span class="font-f1 text-xs text-[#FF8700] font-bold">1988 TURBO ERA</span>
+                        <i class="fa-solid fa-clock-rotate-left text-gray-500"></i>
+                    </div>
+                    <h4 class="font-f1 text-base font-black text-white">McLaren MP4/4</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">One of the most dominant chassis configurations ever constructed. Secured 15 out of 16 grand prix rounds under Senna and Prost.</p>
+                    <div class="bg-black/30 p-2 rounded text-[10px] text-gray-500 flex justify-between font-mono">
+                        <span>Championship: YES</span>
+                        <span>Power: 700 HP</span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="glass-panel p-6 space-y-4 border-t-2 border-[#00A19B]">
+                    <div class="flex justify-between items-start">
+                        <span class="font-f1 text-xs text-[#00A19B] font-bold">2020 HYBRID ERA</span>
+                        <i class="fa-solid fa-clock-rotate-left text-gray-500"></i>
+                    </div>
+                    <h4 class="font-f1 text-base font-black text-white">Mercedes W11</h4>
+                    <p class="text-xs text-gray-400 leading-relaxed">The fastest Formula 1 car ever constructed in history. Formulated dynamic DAS steering alignments under Lewis Hamilton.</p>
+                    <div class="bg-black/30 p-2 rounded text-[10px] text-gray-500 flex justify-between font-mono">
+                        <span>Championship: YES</span>
+                        <span>Power: 1020 HP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= ACADEMY DASHBOARD PAGE ================= -->
+        <div id="page-academy" class="page-container space-y-8">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">DRIVER DEVELOPMENT COCKPIT</h2>
+                    <p class="text-[10px] text-gray-400 mt-1">Enroll in specialized telemetry masterclasses and track your racing licenses</p>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="course-search" oninput="filterCourses()" placeholder="Search Academy..." class="bg-black/40 border border-white/10 px-4 py-2 rounded-lg text-xs font-f1 outline-none focus:border-f1-red w-44">
+                    <select id="course-filter-category" onchange="filterCourses()" class="bg-black/40 border border-white/10 px-3 py-2 rounded-lg text-xs font-f1 text-gray-400 outline-none">
+                        <option value="all">All Tiers</option>
+                        <option value="aero">Aerodynamics</option>
+                        <option value="physics">Track Physics</option>
+                        <option value="strategy">Race Strategy</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Profile dashboard statistics panel -->
+            <div id="academy-profile-section" class="hidden grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 border-l-4 border-f1-gold space-y-4">
+                    <span class="telemetry-label">DRIVER LICENSE STATUS</span>
+                    <h3 id="academy-driver-name" class="font-f1 text-lg font-bold text-white">Lewis Hamilton</h3>
+                    <div class="flex items-center gap-3">
+                        <span id="academy-driver-rank" class="text-[10px] text-f1-gold bg-f1-gold/10 px-2.5 py-0.5 rounded border border-f1-gold/20 font-f1 font-semibold uppercase">Strategist</span>
+                        <span id="academy-driver-xp-text" class="text-[10px] text-gray-400 font-mono">150 XP</span>
+                    </div>
+                    <div class="w-full bg-neutral-900 h-2 rounded-full overflow-hidden">
+                        <div id="academy-driver-xp-progress" class="bg-f1-gold h-full w-[35%]"></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 md:col-span-3 flex flex-col justify-between">
+                    <span class="telemetry-label">ACTIVE DEVELOPMENT PROGRESS</span>
+                    <div id="enrolled-courses-progress-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                        <p class="text-xs text-gray-500 italic">No courses active. Enroll in a telemetry module below to begin operations.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Modules List -->
+            <div class="space-y-6">
+                <h3 class="font-f1 text-lg font-bold border-l-4 border-f1-red pl-3 text-white uppercase">AVAILABLE TELEMETRY COURSES</h3>
+                <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Populated in app.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= COURSE DETAILS PAGE ================= -->
+        <div id="page-course-detail" class="page-container space-y-8">
+            <button onclick="navigateTo('academy')" class="text-gray-400 hover:text-white flex items-center gap-1 text-xs font-f1">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> BACK TO DASHBOARD
+            </button>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Course Header and description -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="space-y-2">
+                        <span id="detail-course-category" class="text-[9px] text-f1-red bg-f1-red/10 border border-f1-red/20 px-2.5 py-0.5 rounded font-f1 uppercase">AERODYNAMICS</span>
+                        <h2 id="detail-course-title" class="font-f1 text-2xl font-black text-white">Apex Hunting & Dynamic Aerodynamics</h2>
+                    </div>
+                    
+                    <p id="detail-course-desc" class="text-xs text-gray-400 leading-relaxed">
+                        Configure ground effect physics and calculate slipstream telemetry curves to execute professional overtakes on high-speed sweeps.
+                    </p>
+
+                    <!-- Syllabus list -->
+                    <div class="space-y-4">
+                        <h3 class="font-f1 text-sm font-semibold text-white uppercase border-b border-white/5 pb-2">Course Syllabus Outline</h3>
+                        <div id="detail-modules-list" class="space-y-3">
+                            <!-- Filled dynamically in app.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 border-t-4 border-f1-gold flex flex-col justify-between space-y-6 h-fit">
+                    <div class="space-y-4">
+                        <span class="telemetry-label font-bold text-f1-gold">SANDBOX ENROLLMENT GATEWAY</span>
+                        <div class="flex justify-between items-baseline mt-4">
+                            <span class="text-xs text-gray-400">Price Package:</span>
+                            <span id="detail-course-price" class="font-f1 text-2xl font-black text-white">$29.00</span>
+                        </div>
+                        <div class="space-y-2 text-xs text-gray-400">
+                            <div class="flex justify-between"><span>Modules Available:</span><span id="detail-course-modules-count" class="text-white font-semibold">3 Modules</span></div>
+                            <div class="flex justify-between"><span>Lessons Available:</span><span id="detail-course-lessons-count" class="text-white font-semibold">8 Lessons</span></div>
+                            <div class="flex justify-between"><span>Career XP Reward:</span><span class="text-f1-gold font-bold">+250 XP</span></div>
+                        </div>
+                    </div>
+
+                    <div id="enrollment-btn-container">
+                        <!-- Filled in app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= LEARNING COCKPIT PAGE ================= -->
+        <div id="page-learning-cockpit" class="page-container space-y-6">
+            <div class="flex justify-between items-center">
+                <button onclick="navigateTo('academy')" class="text-gray-400 hover:text-white flex items-center gap-1 text-xs font-f1">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> RETURN TO COCKPIT
+                </button>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-400">Course progression:</span>
+                    <span id="learning-progress-percent" class="font-f1 text-xs text-f1-gold font-semibold">45%</span>
+                    <div class="w-24 bg-neutral-900 h-1.5 rounded-full overflow-hidden">
+                        <div id="learning-progress-bar" class="bg-f1-gold h-full w-[45%]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Video Simulator Panel -->
+                <div class="lg:col-span-3 space-y-4">
+                    <div class="glass-panel p-4 h-[350px] relative overflow-hidden bg-black flex items-center justify-center border-2 border-white/5">
+                        <canvas id="telemetry-canvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                        <div class="absolute top-4 left-4 z-10 font-f1 text-[9px] text-red-500 border border-red-500/20 px-2 py-0.5 rounded bg-red-500/5 animate-pulse uppercase">
+                            LIVE TELEMETRY CALIBRATION: ON
+                        </div>
+
+                        <!-- Start playback -->
+                        <div class="relative z-10 flex flex-col items-center gap-3 text-center">
+                            <button onclick="playTelemetryVideo()" class="w-14 h-14 rounded-full bg-f1-red text-white flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_var(--primary-glow)]">
+                                <i data-lucide="play" class="w-7 h-7 fill-white ml-1"></i>
+                            </button>
+                            <span class="font-f1 text-[10px] tracking-wider text-white">INITIALIZE RACING VIDEO FEED</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel p-6 space-y-2">
+                        <h3 id="active-lesson-title" class="font-f1 text-base font-bold text-white uppercase">Aerodynamics Slipstream Mechanics</h3>
+                        <p id="active-lesson-content" class="text-xs text-gray-400 leading-relaxed">
+                            To achieve optimal acceleration down long sweeps, align the vehicle chassis directly behind the lead competitor to decrease aerodynamic friction vectors. Complete the checkout verification checklist to submit qualifying logs.
+                        </p>
+                        <div class="flex justify-between items-center mt-6">
+                            <button id="complete-lesson-btn" onclick="toggleActiveLessonCompletion()" class="glass-button text-xs py-2 px-6 bg-transparent border border-f1-red/30 hover:border-f1-red text-white">
+                                <i data-lucide="check-square" class="w-4 h-4 mr-1"></i> MARK LESSON COMPLETED
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Modules Sidebar -->
+                <div class="glass-panel p-6 space-y-4 h-[500px] overflow-y-auto">
+                    <span class="telemetry-label font-bold">COURSE SECTOR ROADMAP</span>
+                    <div id="learning-syllabus-container" class="space-y-4 mt-2">
+                        <!-- Populated in app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= FANTASY LEAGUE PAGE ================= -->
+        <div id="page-fantasy" class="page-container space-y-8">
+            <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black text-white uppercase tracking-wider">FANTASY LEAGUE 2.0</h2>
+                    <p class="text-xs text-gray-400 mt-1">Deploy $100.00M across 5 drivers and 1 constructor frame</p>
+                </div>
+                <div class="text-right">
+                    <span class="telemetry-label">REMAINING BUDGET CAPITAL</span>
+                    <div id="fantasy-budget" class="font-f1 text-xl font-black text-green-400 mt-1">$100.00M</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Driver Selection -->
+                <div class="lg:col-span-2 space-y-6">
+                    <h3 class="font-f1 text-base font-bold border-l-4 border-f1-red pl-3 text-white uppercase">DRAFT ACTIVE DRIVERS</h3>
+                    <div id="fantasy-drivers-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Populated in app.js -->
+                    </div>
+                </div>
+
+                <!-- Selected Fantasy Team Slots -->
+                <div class="glass-panel p-6 space-y-6 h-fit border-t-4 border-f1-gold">
+                    <span class="telemetry-label">YOUR FANTASY SLOTS</span>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs"><span>Driver Slot 1:</span><span id="f-slot-1" class="text-white font-f1 font-semibold">UNASSIGNED</span></div>
+                        <div class="flex justify-between text-xs"><span>Driver Slot 2:</span><span id="f-slot-2" class="text-white font-f1 font-semibold">UNASSIGNED</span></div>
+                        <div class="flex justify-between text-xs"><span>Driver Slot 3:</span><span id="f-slot-3" class="text-white font-f1 font-semibold">UNASSIGNED</span></div>
+                        <div class="flex justify-between text-xs"><span>Driver Slot 4:</span><span id="f-slot-4" class="text-white font-f1 font-semibold">UNASSIGNED</span></div>
+                        <div class="flex justify-between text-xs"><span>Driver Slot 5:</span><span id="f-slot-5" class="text-white font-f1 font-semibold">UNASSIGNED</span></div>
+                    </div>
+
+                    <button onclick="submitFantasyTeam()" class="glass-button w-full py-3 bg-f1-gold hover:bg-yellow-600 border border-f1-gold text-black text-xs font-bold tracking-widest uppercase">
+                        SUBMIT ROSTER CONFIG
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= AI FEATURES HUB PAGE ================= -->
+        <div id="page-ai" class="page-container space-y-8">
+            <div>
+                <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">AI STRATEGY & STANDING HUB</h2>
+                <p class="text-[10px] text-gray-400 mt-1">Generate alternate F1 championships and calculate predictive pitstop strategy matrixes</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- AI Strategy Recalculator Inputs -->
+                <div class="lg:col-span-2 glass-panel p-6 space-y-6">
+                    <span class="telemetry-label font-bold text-white">AI CHAMPIONSHIP RE-SIMULATOR ("WHAT-IF")</span>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="hud-input-group">
+                            <select id="ai-whatif-driver" class="hud-input bg-f1-dark text-white font-f1 text-xs">
+                                <option value="nor">Lando Norris wins Monaco</option>
+                                <option value="lec">Charles Leclerc wins Monza</option>
+                                <option value="ham">Lewis Hamilton wins Silverstone</option>
+                            </select>
+                            <label class="hud-label">CHAMPIONSHIP ALTERATION KEY</label>
+                        </div>
+                        <button onclick="runAIStandingSimulator()" class="glass-button bg-f1-red border-f1-red text-xs py-3 h-[46px]">RE-SIMULATE STANDINGS</button>
+                    </div>
+
+                    <div class="bg-black/40 p-4 rounded border border-white/5 min-h-[160px] flex flex-col justify-between">
+                        <h4 class="font-f1 text-xs text-gray-400 uppercase">Simulated Alternate Standings Projection</h4>
+                        <div id="ai-simulated-output" class="text-xs text-gray-500 italic mt-4">Run the standing simulator parameters above to output telemetry forecasts.</div>
+                    </div>
+                </div>
+
+                <!-- AI Tire Strategy Selector -->
+                <div class="glass-panel p-6 flex flex-col justify-between space-y-6 h-fit border-t-4 border-blue-400">
+                    <div class="space-y-4">
+                        <span class="telemetry-label font-bold text-blue-400">AI PITSTOP ADVISOR</span>
+                        
+                        <div class="hud-input-group">
+                            <input type="number" id="ai-rain-prob" value="40" class="hud-input">
+                            <label class="hud-label">SIMULATED RAIN CHANCE (%)</label>
+                        </div>
+                        <div class="hud-input-group">
+                            <input type="number" id="ai-tyre-wear" value="65" class="hud-input">
+                            <label class="hud-label">CURRENT TYRE DEGRADATION (%)</label>
+                        </div>
+                    </div>
+                    
+                    <button onclick="calculateAITyreStrategy()" class="glass-button w-full bg-blue-600 border-blue-500 py-3 text-xs text-white font-bold">CALCULATE STRATEGY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VISUAL PROGRESSION SHOP PAGE ================= -->
+        <div id="page-shop" class="page-container space-y-8">
+            <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black text-white uppercase tracking-wider">VISUAL PROGRESSION SHOP</h2>
+                    <p class="text-xs text-gray-400 mt-1">Unlock glowing holographic cockpit frames using earned F1VERSE coins</p>
+                </div>
+                <div class="text-right">
+                    <span class="telemetry-label">YOUR COINS COCKPIT ACCOUNT</span>
+                    <div id="shop-user-coins" class="font-f1 text-xl font-black text-f1-gold mt-1">1,000 Coins</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Shop item 1 -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-t-2 border-f1-gold h-60">
+                    <div class="space-y-2">
+                        <h4 class="font-f1 text-sm font-black text-white uppercase">Gold Hologram Profile Frame</h4>
+                        <p class="text-[10px] text-gray-400">Unlock a glowing gold circular border visible on the active cockpit badge.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="font-f1 text-xs text-f1-gold">400 COINS</span>
+                        <button onclick="buyProfileFrame('gold', 400)" class="glass-button text-[9px] py-1 px-4 bg-f1-gold text-black border-f1-gold">BUY SKIN</button>
+                    </div>
+                </div>
+
+                <!-- Shop item 2 -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-t-2 border-[#00fff9] h-60">
+                    <div class="space-y-2">
+                        <h4 class="font-f1 text-sm font-black text-white uppercase">Cyber Cyan Glitch Frame</h4>
+                        <p class="text-[10px] text-gray-400">Applies an electric cyan animated glitch frame overlay on your profile image.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="font-f1 text-xs text-[#00fff9]">500 COINS</span>
+                        <button onclick="buyProfileFrame('cyan', 500)" class="glass-button text-[9px] py-1 px-4 bg-[#00fff9] text-black border-[#00fff9]">BUY SKIN</button>
+                    </div>
+                </div>
+
+                <!-- Shop item 3 -->
+                <div class="glass-panel p-6 flex flex-col justify-between border-t-2 border-[#ff0055] h-60">
+                    <div class="space-y-2">
+                        <h4 class="font-f1 text-sm font-black text-white uppercase">Crimson Red Laser Frame</h4>
+                        <p class="text-[10px] text-gray-400">Unlock a heavy carbon red pulse laser border overlay representing pure racing speed.</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-6">
+                        <span class="font-f1 text-xs text-[#ff0055]">600 COINS</span>
+                        <button onclick="buyProfileFrame('crimson', 600)" class="glass-button text-[9px] py-1 px-4 bg-[#ff0055] text-black border-[#ff0055]">BUY SKIN</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SPONSORS HUB PAGE ================= -->
+        <div id="page-sponsors" class="page-container space-y-8">
+            <div>
+                <h2 class="font-f1 text-2xl font-black border-l-4 border-f1-red pl-3 text-white uppercase tracking-wider">SPONSORSHIPS HUB</h2>
+                <p class="text-xs text-gray-400 mt-1">Sign contract frameworks with elite corporate sponsors to unlock unique decals</p>
+            </div>
+
+            <div id="sponsors-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Populated in app.js -->
+            </div>
+        </div>
+
+        <!-- ================= PIT WALL ADMIN PANEL ================= -->
+        <div id="page-admin" class="page-container space-y-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="font-f1 text-2xl font-black border-l-4 border-blue-500 pl-3 text-white uppercase tracking-wider">PIT WALL ADMIN PANEL</h2>
+                    <p class="text-xs text-gray-400 mt-1">CRUD Operations Cockpit for F1 Academy courses, modules, lessons, and enrollment diagnostics</p>
+                </div>
+                <button onclick="resetAcademyDatabase()" class="glass-button text-[9px] bg-red-950/40 border-red-500 text-red-400">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1"></i> RESET TELEMETRY DATABASE
+                </button>
+            </div>
+
+            <!-- Dashboard statistics widgets -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel p-4 flex flex-col justify-between">
+                    <span class="telemetry-label">Total Courses</span>
+                    <span id="admin-stat-courses" class="font-f1 text-xl font-black text-white mt-1">4</span>
+                </div>
+                <div class="glass-panel p-4 flex flex-col justify-between">
+                    <span class="telemetry-label">Total Registered Users</span>
+                    <span id="admin-stat-users" class="font-f1 text-xl font-black text-white mt-1">1</span>
+                </div>
+                <div class="glass-panel p-4 flex flex-col justify-between">
+                    <span class="telemetry-label">Mock Sandboxed Revenue</span>
+                    <span id="admin-stat-revenue" class="font-f1 text-xl font-black text-green-400 mt-1">$0.00</span>
+                </div>
+                <div class="glass-panel p-4 flex flex-col justify-between">
+                    <span class="telemetry-label">System Telemetry status</span>
+                    <span class="font-f1 text-xs text-green-400 bg-green-500/10 px-2.5 py-0.5 rounded border border-green-500/20 w-fit mt-1 animate-pulse uppercase">SECURE</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Courses management panel -->
+                <div class="lg:col-span-2 glass-panel p-6 space-y-6">
+                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span class="telemetry-label font-bold text-white">ACADEMY COURSES CRUD REGISTRY</span>
+                        <button onclick="openCourseCrudModal('add')" class="glass-button text-[9px] px-3 py-1 bg-blue-600 border border-blue-500">
+                            <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> ADD COURSE
+                        </button>
+                    </div>
+
+                    <div id="admin-courses-list" class="space-y-4">
+                        <!-- Populated in app.js -->
+                    </div>
+                </div>
+
+                <!-- User monitoring list -->
+                <div class="glass-panel p-6 space-y-6">
+                    <span class="telemetry-label font-bold text-white">ACTIVE ACADEMY STUDENTS</span>
+                    <div id="admin-users-list" class="space-y-3">
+                        <!-- Populated in app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Spotify Wrapped Story slides deck modal -->
+    <div id="wrapped-story-modal" class="wrapped-overlay hidden">
+        <div class="wrapped-card">
+            <!-- Glow background overlay -->
+            <div class="wrapped-glow-ball top-10 left-10"></div>
+            <div class="wrapped-glow-ball bottom-10 right-10"></div>
+            
+            <!-- Slides header indicators -->
+            <div class="flex gap-1.5 w-full justify-center">
+                <div class="wrapped-bar h-1 w-8 bg-white/20 rounded"></div>
+                <div class="wrapped-bar h-1 w-8 bg-white/20 rounded"></div>
+                <div class="wrapped-bar h-1 w-8 bg-white/20 rounded"></div>
+                <div class="wrapped-bar h-1 w-8 bg-white/20 rounded"></div>
+            </div>
+
+            <!-- Carousel card content container -->
+            <div class="flex-1 flex flex-col justify-center text-center space-y-6 mt-8 z-10" id="wrapped-slide-content">
+                <!-- Dynamically filled in app.js based on slide Index -->
+            </div>
+
+            <!-- Close and next triggers -->
+            <div class="flex gap-4 mt-8 z-10">
+                <button onclick="closeWrappedStory()" class="glass-button w-1/3 text-[9px] border border-white/10 bg-transparent py-2.5">EXIT</button>
+                <button onclick="nextWrappedSlide()" class="glass-button w-2/3 text-[9px] bg-f1-red border-f1-red py-2.5 text-white font-bold uppercase tracking-widest">NEXT SLIDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentic JWT Authentication Modal Overlay -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 z-[1100] backdrop-filter blur-sm items-center justify-center hidden">
+        <div class="glass-panel w-full max-w-sm p-8 border-t-4 border-f1-red space-y-6 relative">
+            <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <h3 id="auth-modal-title" class="font-f1 text-base font-black text-white uppercase text-center">DRIVER SIGN-IN</h3>
+            
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div class="hud-input-group">
+                    <input type="text" id="auth-username" class="hud-input" required>
+                    <label class="hud-label">DRIVER IDENTIFICATION</label>
+                </div>
+                <div class="hud-input-group">
+                    <input type="password" id="auth-password" class="hud-input" required>
+                    <label class="hud-label">TELEMETRY ACCESS KEY</label>
+                </div>
+                <div id="signup-fields" class="hidden space-y-4">
+                    <div class="hud-input-group">
+                        <input type="email" id="auth-email" class="hud-input">
+                        <label class="hud-label">COMMS EMAIL ADDRESS</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="glass-button w-full py-3 bg-f1-red border-f1-red text-[10px] font-bold uppercase tracking-widest mt-2">
+                    INITIALIZE COMMS LINK
+                </button>
+            </form>
+
+            <div class="text-center text-xs text-gray-500">
+                <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="hover:underline">Need a driver license? Register today</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Razorpay Sandbox Modal Overlay -->
+    <div id="razorpay-modal" class="rzp-modal-overlay hidden">
+        <div class="rzp-modal">
+            <div class="bg-gradient-to-r from-neutral-900 to-neutral-950 p-4 border-b border-f1-red flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-f1-red rounded-full animate-ping"></span>
+                    <span class="font-f1 text-xs tracking-wider text-white font-bold">RAZORPAY SECURE GATEWAY (TEST)</span>
+                </div>
+                <button onclick="cancelRazorpayPayment()" class="text-gray-500 hover:text-white">
+                    <i data-lucide="x" class="w-4.5 h-4.5"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div class="flex justify-between items-center bg-black/40 border border-white/5 p-3 rounded-lg">
+                    <div>
+                        <p class="text-[9px] text-gray-400 font-f1 uppercase">Payment Purpose</p>
+                        <h4 id="rzp-course-title" class="text-xs font-bold text-white mt-0.5">Aerodynamics Course Enrollment</h4>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] text-gray-400 font-f1 uppercase">Amount Due</p>
+                        <h4 id="rzp-course-price" class="text-sm font-f1 font-black text-f1-red">$29.00</h4>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <span class="telemetry-label font-bold text-xs text-gray-400">CREDIT CARD CALIBRATION</span>
+                    <div class="hud-input-group">
+                        <input type="text" value="4111 2222 3333 4444" readonly class="hud-input bg-neutral-900 border-dashed border-white/10 text-gray-400 text-sm">
+                        <label class="hud-label">MOCK CARD NUMBER (SANDBOX)</label>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-2">
+                    <button onclick="cancelRazorpayPayment()" class="glass-button w-1/2 text-[9px] border border-white/10 bg-transparent hover:bg-neutral-900 py-3">ABORT COMMS</button>
+                    <button onclick="completeRazorpayPayment()" class="glass-button w-1/2 text-[9px] bg-green-600 hover:bg-green-700 border-green-500 py-3 text-white font-bold">AUTHORIZE PAYMENT</button>
+                </div>
+            </div>
+            <div class="bg-black/80 px-6 py-2 border-t border-white/5 text-[9px] font-mono text-gray-500 text-center uppercase tracking-widest">
+                SECURE END-TO-END RACING NODE
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Course CRUD Add/Edit Modal Overlay -->
+    <div id="course-crud-modal" class="fixed inset-0 bg-black/85 z-[1200] items-center justify-center hidden">
+        <div class="glass-panel w-full max-w-lg p-8 border-t-4 border-blue-500 space-y-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCourseCrudModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <h3 id="crud-modal-title" class="font-f1 text-base font-black text-white uppercase text-center">REGISTER ACADEMY TELEMETRY</h3>
+            
+            <form onsubmit="handleCourseCrudSubmit(event)" class="space-y-4">
+                <input type="hidden" id="crud-course-id">
+                <div class="hud-input-group">
+                    <input type="text" id="crud-title" class="hud-input" required>
+                    <label class="hud-label">COURSE TITLE</label>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="hud-input-group">
+                        <select id="crud-category" class="hud-input bg-f1-dark text-white font-f1 text-xs">
+                            <option value="aero">Aerodynamics</option>
+                            <option value="physics">Track Physics</option>
+                            <option value="strategy">Race Strategy</option>
+                        </select>
+                        <label class="hud-label">COURSE DISCIPLINE</label>
+                    </div>
+                    <div class="hud-input-group">
+                        <input type="number" step="0.01" id="crud-price" class="hud-input" required>
+                        <label class="hud-label">ENROLLMENT PRICE ($)</label>
+                    </div>
+                </div>
+                <div class="hud-input-group">
+                    <textarea id="crud-desc" rows="3" class="hud-input resize-none" required></textarea>
+                    <label class="hud-label">TELEMETRY SYLLABUS OVERVIEW</label>
+                </div>
+
+                <div class="border-t border-white/5 pt-4 space-y-4">
+                    <span class="telemetry-label font-bold text-blue-400">Lesson Module Core (Demo Lesson)</span>
+                    <div class="hud-input-group">
+                        <input type="text" id="crud-lesson-title" class="hud-input" value="Telemetry Mechanics & Dynamic Slips" required>
+                        <label class="hud-label">DEMO LESSON TITLE</label>
+                    </div>
+                    <div class="hud-input-group">
+                        <textarea id="crud-lesson-content" rows="2" class="hud-input resize-none" required>Practice racing lines directly in the wind tunnel simulation to analyze tire surface friction coefficients.</textarea>
+                        <label class="hud-label">DEMO LESSON DATA FEED</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="glass-button w-full py-3 bg-blue-600 border-blue-500 text-xs font-bold uppercase tracking-widest">
+                    RECORD COURSE REGISTRY
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core App JS Handler -->
+    <script src="app.js"></script>
+</body>
+</html>
