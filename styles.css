@@ -1,0 +1,642 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;600;800;900&display=swap');
+
+:root {
+    --bg-dark: #050508;
+    --card-bg: rgba(13, 13, 23, 0.65);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --glass-blur: blur(12px);
+    
+    /* Team Themes (Default: F1 Red) */
+    --primary: #FF1801;
+    --primary-glow: rgba(255, 24, 1, 0.4);
+    --text-glow: rgba(255, 24, 1, 0.2);
+    --accent: #FF5A00;
+    
+    --font-f1: 'Orbitron', sans-serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+/* Ferrari Theme */
+[data-theme="ferrari"] {
+    --primary: #E00000;
+    --primary-glow: rgba(224, 0, 0, 0.5);
+    --text-glow: rgba(224, 0, 0, 0.25);
+    --accent: #FFFFFF;
+}
+
+/* Mercedes Theme */
+[data-theme="mercedes"] {
+    --primary: #00A19B;
+    --primary-glow: rgba(0, 161, 155, 0.5);
+    --text-glow: rgba(0, 161, 155, 0.25);
+    --accent: #FFFFFF;
+}
+
+/* McLaren Theme */
+[data-theme="mclaren"] {
+    --primary: #FF8700;
+    --primary-glow: rgba(255, 135, 0, 0.5);
+    --text-glow: rgba(255, 135, 0, 0.25);
+    --accent: #1E1E1E;
+}
+
+/* Red Bull Theme */
+[data-theme="redbull"] {
+    --primary: #001A30;
+    --primary-glow: rgba(0, 26, 48, 0.6);
+    --text-glow: rgba(255, 236, 0, 0.35);
+    --accent: #FFEC00;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.5);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #F3F4F6;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Cyber Grid Overlay */
+.cyber-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+    );
+    background-size: 100% 4px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.neon-glow {
+    box-shadow: 0 0 20px var(--primary-glow), inset 0 0 10px var(--primary-glow);
+}
+
+.text-neon-glow {
+    text-shadow: 0 0 8px var(--text-glow), 0 0 20px var(--primary-glow);
+}
+
+/* Glitch Animation */
+@keyframes glitch {
+    0% { clip-path: inset(40% 0 61% 0); transform: skew(0.3deg); }
+    20% { clip-path: inset(92% 0 1% 0); transform: skew(-0.5deg); }
+    40% { clip-path: inset(15% 0 80% 0); transform: skew(0.5deg); }
+    60% { clip-path: inset(80% 0 5% 0); transform: skew(-0.3deg); }
+    80% { clip-path: inset(3% 0 92% 0); transform: skew(0.8deg); }
+    100% { clip-path: inset(40% 0 61% 0); transform: skew(0deg); }
+}
+
+.glitch {
+    position: relative;
+}
+.glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+}
+.glitch::before {
+    left: 2px;
+    text-shadow: -1px 0 #ff00c1;
+    clip: rect(44px, 450px, 56px, 0);
+    animation: glitch 5s infinite linear alternate-reverse;
+}
+.glitch::after {
+    left: -2px;
+    text-shadow: -1px 0 #00fff9, 0 1px #00fff9;
+    clip: rect(85px, 450px, 140px, 0);
+    animation: glitch 5s infinite linear alternate-reverse;
+}
+
+@keyframes vibrate {
+    0% { transform: translate(0, 0); }
+    10% { transform: translate(-2px, -2px); }
+    20% { transform: translate(2px, -1px); }
+    30% { transform: translate(-1px, 2px); }
+    40% { transform: translate(1px, -1px); }
+    50% { transform: translate(-2px, 2px); }
+    60% { transform: translate(2px, 1px); }
+    70% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 2px); }
+    90% { transform: translate(-2px, -1px); }
+    100% { transform: translate(0, 0); }
+}
+
+.screen-shake-active {
+    animation: vibrate 0.15s infinite;
+}
+
+/* Glass Panels */
+.glass-panel {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-panel:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.glass-button {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #FFF;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-f1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.glass-button:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+    transform: translateY(-2px);
+}
+
+/* High-tech HUD Input Elements */
+.hud-input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.hud-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    color: #FFF;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.hud-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.hud-label {
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: #050508;
+    padding: 0 6px;
+    font-size: 0.7rem;
+    font-family: var(--font-f1);
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
+}
+
+/* Futuristic FUT Driver Cards */
+.fut-card {
+    position: relative;
+    width: 200px;
+    height: 290px;
+    background: linear-gradient(135deg, #111 0%, #222 50%, #050505 100%);
+    border: 2px solid #D4AF37; /* Default gold */
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+.fut-card:hover {
+    transform: translateY(-8px) rotateY(8deg) rotateX(8deg);
+    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.25);
+}
+
+.fut-rating {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-family: var(--font-f1);
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: #D4AF37;
+    line-height: 1;
+}
+
+.fut-position {
+    position: absolute;
+    top: 36px;
+    left: 12px;
+    font-family: var(--font-f1);
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: rgba(255,255,255,0.7);
+}
+
+.fut-avatar {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin-top: 15px;
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+.fut-name {
+    font-family: var(--font-f1);
+    font-weight: 800;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #FFF;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+.fut-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: 100%;
+    margin-top: 8px;
+    font-size: 0.65rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 6px;
+}
+
+.fut-stat-item {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255,255,255,0.8);
+}
+
+.fut-stat-val {
+    font-family: var(--font-f1);
+    font-weight: 700;
+    color: #D4AF37;
+}
+
+/* Telemetry Screen Overlays */
+.telemetry-label {
+    font-size: 0.65rem;
+    font-family: var(--font-f1);
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Page Fades & Onboarding Animation Containers */
+.page-container {
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+}
+
+.page-container.active-page {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+    position: relative;
+    visibility: visible;
+}
+
+/* Razorpay High-Tech Sandbox Styles */
+.rzp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.rzp-modal {
+    width: 380px;
+    background: #050508;
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    box-shadow: 0 0 30px var(--primary-glow);
+    overflow: hidden;
+}
+
+/* Unlockable Profile Frames (Visual Progression Store) */
+.profile-frame-gold {
+    box-shadow: 0 0 20px #D4AF37, inset 0 0 10px #D4AF37 !important;
+    border-color: #D4AF37 !important;
+}
+
+.profile-frame-cyan {
+    box-shadow: 0 0 20px #00fff9, inset 0 0 10px #00fff9 !important;
+    border-color: #00fff9 !important;
+}
+
+.profile-frame-crimson {
+    box-shadow: 0 0 20px #ff0055, inset 0 0 10px #ff0055 !important;
+    border-color: #ff0055 !important;
+}
+
+/* Spotify Wrapped Sliding Storyboard Styles */
+.wrapped-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #1b0a2b 0%, #030107 100%);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(15px);
+}
+
+.wrapped-card {
+    width: 350px;
+    height: 600px;
+    background: rgba(20, 10, 30, 0.7);
+    border: 2px solid rgba(255, 0, 255, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 0 40px rgba(255, 0, 255, 0.15);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 32px;
+    overflow: hidden;
+    position: relative;
+}
+
+.wrapped-glow-ball {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: var(--primary);
+    filter: blur(80px);
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Car Reveal Door Shutter Overlay */
+.shutter-door-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to bottom, #111 80%, #000 100%);
+    border-bottom: 4px solid var(--primary);
+    z-index: 100;
+    transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+.shutter-door-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(to top, #111 80%, #000 100%);
+    border-top: 4px solid var(--primary);
+    z-index: 100;
+    transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+}
+
+.shutter-open .shutter-door-top {
+    transform: translateY(-100%);
+}
+
+.shutter-open .shutter-door-bottom {
+    transform: translateY(100%);
+}
+
+.smoke-cloud {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+    filter: blur(30px);
+    pointer-events: none;
+    animation: blow-up 3s forwards;
+    opacity: 0;
+}
+
+@keyframes blow-up {
+    0% { transform: scale(0.2) translate(0, 50px); opacity: 0; }
+    30% { opacity: 0.8; }
+    100% { transform: scale(2) translate(0, -100px); opacity: 0; }
+}
+
+/* Next-Gen Holographic Garage Additions */
+
+/* Animated Horizontal Laser Scanner Sweep */
+.laser-scanner-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    box-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary-glow);
+    z-index: 25;
+    pointer-events: none;
+    animation: laser-sweep 4s infinite ease-in-out;
+}
+
+@keyframes laser-sweep {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* Volumetric Spotlights Gradients */
+.volumetric-cone {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 450px;
+    background: radial-gradient(ellipse at top, var(--primary-glow) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 5;
+    mix-blend-mode: screen;
+    opacity: 0.35;
+    transition: background 0.8s ease;
+}
+
+/* Floor Grid Reflections */
+.neon-floor-grid {
+    background-image: 
+        linear-gradient(var(--primary-glow) 1px, transparent 1px),
+        linear-gradient(90deg, var(--primary-glow) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: center;
+    opacity: 0.15;
+    transform: perspective(500px) rotateX(60deg);
+    transform-origin: top;
+    transition: background-image 0.8s ease;
+}
+
+/* 3D Floating Tech HUD Panel overlays */
+.holo-card-hud {
+    position: absolute;
+    background: rgba(5, 5, 8, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: 0 0 15px var(--primary-glow);
+    z-index: 30;
+    pointer-events: auto;
+    font-family: var(--font-f1);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.holo-card-hud:hover {
+    transform: translate(-2px, -2px) scale(1.03);
+    border-color: #FFF;
+    box-shadow: 0 0 25px rgba(255,255,255,0.2);
+}
+
+/* Exploded part details overlay panel */
+.exploded-details-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    z-index: 40;
+    background: rgba(13, 13, 23, 0.85);
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 20px var(--primary-glow);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+/* Comparison side-by-side layout styles */
+.comparison-container-active {
+    grid-template-columns: 1fr 1fr !important;
+}
+
+.comparison-stat-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.comparison-stat-fill {
+    height: 100%;
+    background: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* R&D Lab Timeline Layout */
+.rd-timeline-nav {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 10px 0;
+}
+
+.rd-timeline-nav::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(255,255,255,0.08);
+    z-index: 1;
+}
+
+.rd-timeline-node {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0d0d17;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-f1);
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.rd-timeline-node:hover, .rd-timeline-node.active-node {
+    border-color: var(--primary);
+    color: #FFF;
+    box-shadow: 0 0 12px var(--primary-glow);
+    transform: scale(1.15);
+}
+
