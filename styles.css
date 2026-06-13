@@ -1,52 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;600;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,700;1,800&family=Titillium+Web:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Fira+Code:wght@400;700&display=swap');
 
 :root {
-    --bg-dark: #050508;
-    --card-bg: rgba(13, 13, 23, 0.65);
-    --border-color: rgba(255, 255, 255, 0.08);
-    --glass-blur: blur(12px);
+    --bg-dark: #0F0F14;
+    --card-bg: #15151F;
+    --border-color: #272735;
+    --glass-blur: none;
     
     /* Team Themes (Default: F1 Red) */
-    --primary: #FF1801;
-    --primary-glow: rgba(255, 24, 1, 0.4);
-    --text-glow: rgba(255, 24, 1, 0.2);
-    --accent: #FF5A00;
+    --primary: #E10600;
+    --primary-glow: rgba(225, 6, 0, 0.15);
+    --text-glow: rgba(225, 6, 0, 0.08);
+    --accent: #FFFFFF;
     
-    --font-f1: 'Orbitron', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-f1: 'Titillium Web', 'Montserrat', sans-serif;
+    --font-body: 'Montserrat', sans-serif;
 }
 
 /* Ferrari Theme */
 [data-theme="ferrari"] {
-    --primary: #E00000;
-    --primary-glow: rgba(224, 0, 0, 0.5);
-    --text-glow: rgba(224, 0, 0, 0.25);
+    --primary: #E10600;
+    --primary-glow: rgba(225, 6, 0, 0.2);
+    --text-glow: rgba(225, 6, 0, 0.1);
     --accent: #FFFFFF;
 }
 
 /* Mercedes Theme */
 [data-theme="mercedes"] {
     --primary: #00A19B;
-    --primary-glow: rgba(0, 161, 155, 0.5);
-    --text-glow: rgba(0, 161, 155, 0.25);
+    --primary-glow: rgba(0, 161, 155, 0.2);
+    --text-glow: rgba(0, 161, 155, 0.1);
     --accent: #FFFFFF;
 }
 
 /* McLaren Theme */
 [data-theme="mclaren"] {
     --primary: #FF8700;
-    --primary-glow: rgba(255, 135, 0, 0.5);
-    --text-glow: rgba(255, 135, 0, 0.25);
-    --accent: #1E1E1E;
+    --primary-glow: rgba(255, 135, 0, 0.2);
+    --text-glow: rgba(255, 135, 0, 0.1);
+    --accent: #FFFFFF;
 }
 
 /* Red Bull Theme */
 [data-theme="redbull"] {
-    --primary: #001A30;
-    --primary-glow: rgba(0, 26, 48, 0.6);
-    --text-glow: rgba(255, 236, 0, 0.35);
+    --primary: #061D3B;
+    --primary-glow: rgba(6, 29, 59, 0.3);
+    --text-glow: rgba(255, 236, 0, 0.2);
     --accent: #FFEC00;
 }
+
 
 * {
     margin: 0;
@@ -79,6 +80,7 @@ body {
 
 /* Cyber Grid Overlay */
 .cyber-grid {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -94,6 +96,7 @@ body {
 }
 
 .scanlines {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
@@ -106,6 +109,11 @@ body {
     background-size: 100% 4px;
     z-index: 2;
     pointer-events: none;
+}
+
+body.show-cyber-hud .cyber-grid,
+body.show-cyber-hud .scanlines {
+    display: block;
 }
 
 .neon-glow {
@@ -169,33 +177,34 @@ body {
     animation: vibrate 0.15s infinite;
 }
 
-/* Glass Panels */
+/* Glass Panels - Redesigned as solid F1 panels */
 .glass-panel {
     background: var(--card-bg);
-    backdrop-filter: var(--glass-blur);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    border-top: 4px solid var(--primary); /* Official F1 brand line */
+    border-radius: 4px; /* Sharp corners */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
 }
 
 .glass-panel:hover {
-    border-color: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .glass-button {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1F1F27;
+    border: 1px solid #3F3F4F;
     color: #FFF;
     padding: 10px 20px;
-    border-radius: 8px;
+    border-radius: 4px; /* sharp corners */
     font-family: var(--font-f1);
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-style: italic; /* sporty */
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -205,7 +214,7 @@ body {
 .glass-button:hover {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
+    box-shadow: 0 4px 12px var(--primary-glow);
     transform: translateY(-2px);
 }
 
@@ -639,4 +648,218 @@ body {
     box-shadow: 0 0 12px var(--primary-glow);
     transform: scale(1.15);
 }
+
+/* Official F1 Logo Badge */
+.f1-logo-badge {
+    background-color: var(--primary);
+    color: #FFFFFF;
+    font-family: var(--font-f1);
+    font-weight: 900;
+    font-style: italic;
+    padding: 6px 14px;
+    border-radius: 2px;
+    letter-spacing: 0.15em;
+    display: inline-block;
+    border-left: 4px solid #FFFFFF;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    text-transform: uppercase;
+}
+
+/* F1 Standings Card Styling */
+.f1-standings-card {
+    display: flex;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 2px;
+    padding: 14px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 270px;
+    height: 95px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.f1-standings-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--team-color, var(--primary));
+}
+.f1-standings-card:hover {
+    border-color: rgba(225, 6, 0, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(225, 6, 0, 0.15);
+}
+.f1-standings-rank {
+    font-family: var(--font-f1);
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.12);
+    font-style: italic;
+    width: 45px;
+    line-height: 1;
+    text-align: left;
+}
+.f1-standings-avatar {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    border-radius: 2px;
+    margin-right: 12px;
+    border: 1px solid var(--border-color);
+    filter: grayscale(100%);
+    transition: filter 0.3s ease;
+}
+.f1-standings-card:hover .f1-standings-avatar {
+    filter: grayscale(0%);
+}
+.f1-standings-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1;
+}
+.f1-standings-name {
+    font-family: var(--font-f1);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #FFF;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.f1-standings-name span {
+    font-family: var(--font-body);
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: none;
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0;
+}
+.f1-standings-team {
+    font-family: var(--font-body);
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+}
+.f1-standings-points-box {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.f1-standings-points {
+    font-family: var(--font-f1);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #FFF;
+    line-height: 1;
+}
+.f1-standings-points-label {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+}
+
+/* F1 Live Session Tracker Ticker */
+.f1-session-tracker {
+    background: #08080c;
+    border-bottom: 1px solid #1c1c24;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none;
+}
+.f1-session-tracker::-webkit-scrollbar {
+    display: none;
+}
+.f1-session-title {
+    font-family: var(--font-f1);
+    font-size: 0.75rem;
+    font-weight: 800;
+    font-style: italic;
+    color: var(--primary);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.f1-session-items-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+.f1-session-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.05em;
+}
+.f1-session-item-name {
+    font-family: var(--font-f1);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #FFF;
+}
+.f1-session-item-time {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    background: rgba(225, 6, 0, 0.1);
+    border: 1px solid rgba(225, 6, 0, 0.2);
+    padding: 2px 8px;
+    border-radius: 1px;
+    color: #ff9191;
+}
+.f1-session-status {
+    font-size: 0.55rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 1px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.f1-session-status.finished {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.f1-session-status.upcoming {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.25);
+}
+
+/* Nav Link accent top border */
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--primary);
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link:hover::after, .nav-link.text-white::after {
+    width: 100%;
+}
+
 
