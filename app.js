@@ -60,11 +60,11 @@ const DEFAULT_COURSES = [
 ];
 
 const DEFAULT_DRIVERS = [
-    { id: "ham", name: "Lewis Hamilton", rating: 94, team: "mercedes", price: 32.0, pace: 95, qual: 96, def: 92, iq: 98 },
-    { id: "ver", name: "Max Verstappen", rating: 95, team: "redbull", price: 34.0, pace: 97, qual: 95, def: 94, iq: 96 },
-    { id: "lec", name: "Charles Leclerc", rating: 92, team: "ferrari", price: 28.0, pace: 93, qual: 97, def: 88, iq: 90 },
-    { id: "nor", name: "Lando Norris", rating: 91, team: "mclaren", price: 26.0, pace: 92, qual: 94, def: 89, iq: 92 },
-    { id: "alo", name: "Fernando Alonso", rating: 90, team: "aston", price: 22.0, pace: 89, qual: 91, def: 95, iq: 97 }
+    { id: "ver", name: "Max Verstappen", number: 1, points: 258, country: "NED", team: "redbull", teamColor: "#061D3B", avatar: "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/M/MAXVER01_Max_Verstappen/maxver01.png", rating: 95, price: 34.0, pace: 97, qual: 95, def: 94, iq: 96 },
+    { id: "ham", name: "Lewis Hamilton", number: 44, points: 190, country: "GBR", team: "mercedes", teamColor: "#00A19B", avatar: "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/L/LEWHAM01_Lewis_Hamilton/lewham01.png", rating: 94, price: 32.0, pace: 95, qual: 96, def: 92, iq: 98 },
+    { id: "lec", name: "Charles Leclerc", number: 16, points: 175, country: "MON", team: "ferrari", teamColor: "#E10600", avatar: "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/C/CHALEC01_Charles_Leclerc/chalec01.png", rating: 92, price: 28.0, pace: 93, qual: 97, def: 88, iq: 90 },
+    { id: "nor", name: "Lando Norris", number: 4, points: 162, country: "GBR", team: "mclaren", teamColor: "#FF8700", avatar: "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/L/LANNOR01_Lando_Norris/lannor01.png", rating: 91, price: 26.0, pace: 92, qual: 94, def: 89, iq: 92 },
+    { id: "alo", name: "Fernando Alonso", number: 14, points: 110, country: "ESP", team: "aston", teamColor: "#229954", avatar: "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/F/FERALO01_Fernando_Alonso/feralo01.png", rating: 90, price: 22.0, pace: 89, qual: 91, def: 95, iq: 97 }
 ];
 
 const DEFAULT_SPONSORS = [
@@ -268,7 +268,7 @@ function toggleSound() {
     } else {
         volumeIcon.setAttribute("data-lucide", "volume-2");
     }
-    lucide.createImages();
+    lucide.createIcons();
 }
 
 // --- FIRST VISIT EXPERIENCE (ONBOARDING) ---
@@ -471,7 +471,7 @@ if (standingCanvas) {
 
 // --- DAMP WEATHER / GP COUNTDOWN DEVIATOR ---
 function updateGPCountdown() {
-    const targetDate = new Date("Jun 7, 2026 16:00:00").getTime();
+    const targetDate = new Date("Jul 5, 2026 15:00:00").getTime();
     const now = new Date().getTime();
     const distance = targetDate - now;
     
@@ -482,10 +482,15 @@ function updateGPCountdown() {
     const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((distance % (1000 * 60)) / 1000);
     
-    document.getElementById("days").textContent = d.toString().padStart(2, '0');
-    document.getElementById("hours").textContent = h.toString().padStart(2, '0');
-    document.getElementById("minutes").textContent = m.toString().padStart(2, '0');
-    document.getElementById("seconds").textContent = s.toString().padStart(2, '0');
+    const daysEl = document.getElementById("days");
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
+    
+    if (daysEl) daysEl.textContent = d.toString().padStart(2, '0');
+    if (hoursEl) hoursEl.textContent = h.toString().padStart(2, '0');
+    if (minutesEl) minutesEl.textContent = m.toString().padStart(2, '0');
+    if (secondsEl) secondsEl.textContent = s.toString().padStart(2, '0');
 }
 setInterval(updateGPCountdown, 1000);
 
@@ -1738,19 +1743,29 @@ function renderHomeDrivers() {
     if (!container) return;
     container.innerHTML = "";
     
-    DEFAULT_DRIVERS.slice(0, 3).forEach(d => {
+    const sortedDrivers = [...DEFAULT_DRIVERS].sort((a, b) => b.points - a.points);
+    
+    sortedDrivers.slice(0, 3).forEach((d, index) => {
         const card = document.createElement("div");
-        card.className = "fut-card border-f1-gold hover:scale-105 transition-all";
+        card.className = "f1-standings-card";
+        card.style.setProperty("--team-color", d.teamColor);
+        
+        const nameParts = d.name.split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(" ");
+        
         card.innerHTML = `
-            <div class="fut-rating text-f1-gold">${d.rating}</div>
-            <div class="fut-position">${d.id.toUpperCase()}</div>
-            <div class="fut-name">${d.name}</div>
-            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100" class="fut-avatar">
-            <div class="fut-stats">
-                <div class="fut-stat-item"><span>PACE</span><span class="fut-stat-val">${d.pace}</span></div>
-                <div class="fut-stat-item"><span>QUAL</span><span class="fut-stat-val">${d.qual}</span></div>
-                <div class="fut-stat-item"><span>DEF</span><span class="fut-stat-val">${d.def}</span></div>
-                <div class="fut-stat-item"><span>IQ</span><span class="fut-stat-val">${d.iq}</span></div>
+            <div class="f1-standings-rank">${index + 1}</div>
+            <img src="${d.avatar}" class="f1-standings-avatar" alt="${d.name}">
+            <div class="f1-standings-details">
+                <div class="f1-standings-name">
+                    <span>${firstName}</span>${lastName}
+                </div>
+                <div class="f1-standings-team">${d.team.toUpperCase()} | ${d.country}</div>
+            </div>
+            <div class="f1-standings-points-box">
+                <div class="f1-standings-points">${d.points}</div>
+                <div class="f1-standings-points-label">PTS</div>
             </div>
         `;
         container.appendChild(card);
@@ -1844,7 +1859,7 @@ function openCourseDetails(courseId) {
         `;
     }
     
-    lucide.createImages();
+    lucide.createIcons();
 }
 
 function filterCourses() {
@@ -2029,7 +2044,7 @@ function selectActiveLesson(lessonId) {
     }
     
     renderLearningSyllabus(course, userCourse);
-    lucide.createImages();
+    lucide.createIcons();
 }
 
 function toggleActiveLessonCompletion() {
@@ -2192,22 +2207,28 @@ function syncUserNavbar() {
     const adminBtn = document.getElementById("admin-nav-btn");
     
     if (activeUser) {
-        authBtn.classList.add("hidden");
-        badge.classList.remove("hidden");
+        if (authBtn) authBtn.classList.add("hidden");
+        if (badge) badge.classList.remove("hidden");
         
-        document.getElementById("user-badge-name").textContent = activeUser.username;
-        document.getElementById("user-badge-xp").textContent = `${activeUser.xp} XP (${activeUser.rank})`;
-        document.getElementById("shop-user-coins").textContent = `${activeUser.coins} Coins`;
+        const badgeName = document.getElementById("user-badge-name");
+        const badgeXp = document.getElementById("user-badge-xp");
+        const shopCoins = document.getElementById("shop-user-coins");
         
-        if (activeUser.role === 'admin') {
-            adminBtn.classList.remove("hidden");
-        } else {
-            adminBtn.classList.add("hidden");
+        if (badgeName) badgeName.textContent = activeUser.username;
+        if (badgeXp) badgeXp.textContent = `${activeUser.xp} XP (${activeUser.rank})`;
+        if (shopCoins) shopCoins.textContent = `${activeUser.coins} Coins`;
+        
+        if (adminBtn) {
+            if (activeUser.role === 'admin') {
+                adminBtn.classList.remove("hidden");
+            } else {
+                adminBtn.classList.add("hidden");
+            }
         }
     } else {
-        authBtn.classList.remove("hidden");
-        badge.classList.add("hidden");
-        adminBtn.classList.add("hidden");
+        if (authBtn) authBtn.classList.remove("hidden");
+        if (badge) badge.classList.add("hidden");
+        if (adminBtn) adminBtn.classList.add("hidden");
     }
 }
 
@@ -2317,23 +2338,26 @@ function syncFantasyRightPanel() {
     
     const budgetRemaining = 100.0 - spent;
     const budgetText = document.getElementById("fantasy-budget");
-    budgetText.textContent = `$${budgetRemaining.toFixed(2)}M`;
-    
-    if (budgetRemaining < 0) {
-        budgetText.className = "font-f1 text-xl font-black text-red-500 mt-1 animate-pulse";
-    } else {
-        budgetText.className = "font-f1 text-xl font-black text-green-400 mt-1";
+    if (budgetText) {
+        budgetText.textContent = `$${budgetRemaining.toFixed(2)}M`;
+        if (budgetRemaining < 0) {
+            budgetText.className = "font-f1 text-xl font-black text-red-500 mt-1 animate-pulse";
+        } else {
+            budgetText.className = "font-f1 text-xl font-black text-green-400 mt-1";
+        }
     }
     
     for (let i = 1; i <= 5; i++) {
         const slot = document.getElementById(`f-slot-${i}`);
-        if (draftedDrivers[i-1]) {
-            const d = DEFAULT_DRIVERS.find(driver => driver.id === draftedDrivers[i-1]);
-            slot.textContent = d.name.toUpperCase();
-            slot.className = "text-white font-f1 font-semibold";
-        } else {
-            slot.textContent = "UNASSIGNED";
-            slot.className = "text-gray-500 font-f1";
+        if (slot) {
+            if (draftedDrivers[i-1]) {
+                const d = DEFAULT_DRIVERS.find(driver => driver.id === draftedDrivers[i-1]);
+                slot.textContent = d.name.toUpperCase();
+                slot.className = "text-white font-f1 font-semibold";
+            } else {
+                slot.textContent = "UNASSIGNED";
+                slot.className = "text-gray-500 font-f1";
+            }
         }
     }
 }
@@ -2465,25 +2489,29 @@ function renderAdminPitWall() {
         coursesList.appendChild(row);
     });
     
-    document.getElementById("admin-stat-courses").textContent = dbCourses.length;
-    document.getElementById("admin-stat-revenue").textContent = `$${systemRevenue.toFixed(2)}`;
+    const adminStatCourses = document.getElementById("admin-stat-courses");
+    if (adminStatCourses) adminStatCourses.textContent = dbCourses.length;
+    
+    const adminStatRevenue = document.getElementById("admin-stat-revenue");
+    if (adminStatRevenue) adminStatRevenue.textContent = `$${systemRevenue.toFixed(2)}`;
     
     const usersList = document.getElementById("admin-users-list");
-    usersList.innerHTML = "";
-    
-    if (activeUser) {
-        const uRow = document.createElement("div");
-        uRow.className = "bg-neutral-900/40 border border-white/5 p-3 rounded-md flex justify-between items-center text-xs";
-        uRow.innerHTML = `
-            <div>
-                <span class="text-white font-semibold">${activeUser.username}</span>
-                <p class="text-[9px] text-gray-500 font-mono mt-0.5">${activeUser.email}</p>
-            </div>
-            <span class="text-f1-gold font-mono text-[9px]">${activeUser.xp} XP</span>
-        `;
-        usersList.appendChild(uRow);
-    } else {
-        usersList.innerHTML = `<p class="text-xs text-gray-500 italic">No students active in simulator nodes.</p>`;
+    if (usersList) {
+        usersList.innerHTML = "";
+        if (activeUser) {
+            const uRow = document.createElement("div");
+            uRow.className = "bg-neutral-900/40 border border-white/5 p-3 rounded-md flex justify-between items-center text-xs";
+            uRow.innerHTML = `
+                <div>
+                    <span class="text-white font-semibold">${activeUser.username}</span>
+                    <p class="text-[9px] text-gray-500 font-mono mt-0.5">${activeUser.email}</p>
+                </div>
+                <span class="text-f1-gold font-mono text-[9px]">${activeUser.xp} XP</span>
+            `;
+            usersList.appendChild(uRow);
+        } else {
+            usersList.innerHTML = `<p class="text-xs text-gray-500 italic">No students active in simulator nodes.</p>`;
+        }
     }
 }
 
@@ -2628,8 +2656,8 @@ function handleContactSubmit(e) {
 }
 
 // --- INITIALIZER BOOTSTRAPPER ---
-window.addEventListener("DOMContentLoaded", () => {
-    lucide.createImages();
+function bootstrapApp() {
+    lucide.createIcons();
     syncUserNavbar();
     renderAcademyCourses();
     renderFantasyDraft();
@@ -2637,4 +2665,10 @@ window.addEventListener("DOMContentLoaded", () => {
     renderAdminPitWall();
     syncGarageDecals();
     renderHomeDrivers();
-});
+}
+
+if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", bootstrapApp);
+} else {
+    bootstrapApp();
+}
