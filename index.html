@@ -12,14 +12,14 @@
                 extend: {
                     colors: {
                         f1: {
-                            red: '#FF1801',
-                            dark: '#050508',
-                            glass: 'rgba(13, 13, 23, 0.65)',
-                            gold: '#D4AF37'
+                            red: '#E10600', // mapped to F1 Red
+                            dark: '#08080C',
+                            glass: '#111116',
+                            gold: '#FFB800'
                         }
                     },
                     fontFamily: {
-                        f1: ['Orbitron', 'sans-serif'],
+                        f1: ['Montserrat', 'sans-serif'],
                         body: ['Inter', 'sans-serif']
                     }
                 }
@@ -34,7 +34,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-f1-dark text-gray-200 min-h-screen relative overflow-x-hidden" data-theme="ferrari">
+<body class="bg-f1-dark text-gray-200 min-h-screen relative overflow-x-hidden">
 
     <!-- Global HUD Overlays -->
     <div class="cyber-grid"></div>
@@ -132,20 +132,14 @@
     <!-- Authentic Navigation Cockpit -->
     <nav class="sticky top-0 w-full z-50 glass-panel border-x-0 border-t-0 border-b border-white/5 rounded-none px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-8">
-            <a href="#" onclick="navigateTo('home')" class="font-f1 text-2xl font-black tracking-wider text-white hover:opacity-85 flex items-center gap-2">
-                F1<span class="text-f1-red">VERSE</span>
+            <a href="#" onclick="navigateTo('home')" class="font-f1 text-2xl font-black tracking-wider text-white hover:opacity-85 flex items-center gap-1">
+                <span class="f1-logo-badge">F1</span><span class="text-white font-black ml-1 uppercase">VERSE</span>
             </a>
             <!-- Nav Links -->
-            <div class="hidden lg:flex items-center gap-5 font-f1 text-[10px] uppercase tracking-widest text-gray-400">
+            <div class="hidden lg:flex items-center gap-6 font-f1 text-[10px] uppercase tracking-widest text-gray-400">
                 <a href="#" onclick="navigateTo('home')" class="nav-link hover:text-white transition-colors py-1 relative">Home</a>
-                <a href="#" onclick="navigateTo('about')" class="nav-link hover:text-white transition-colors py-1 relative">About</a>
-                <a href="#" onclick="navigateTo('services')" class="nav-link hover:text-white transition-colors py-1 relative">Services</a>
-                <a href="#" onclick="navigateTo('contact')" class="nav-link hover:text-white transition-colors py-1 relative">Contact</a>
-                <span class="w-[1px] h-4 bg-white/10"></span>
-                <a href="#" onclick="navigateTo('garage')" class="nav-link hover:text-white transition-colors py-1 relative text-f1-red font-semibold"><i class="fa-solid fa-car-side mr-1"></i> Garage</a>
-                <a href="#" onclick="navigateTo('academy')" class="nav-link hover:text-white transition-colors py-1 relative text-f1-gold font-semibold"><i class="fa-solid fa-graduation-cap mr-1"></i> Academy</a>
-                <a href="#" onclick="navigateTo('tracks')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-map mr-1"></i> Tracks</a>
-                <a href="#" onclick="navigateTo('museum')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-building-columns mr-1"></i> Museum</a>
+                <a href="#" onclick="navigateTo('academy')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-graduation-cap mr-1"></i> Academy</a>
+                <a href="#" onclick="navigateTo('garage')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-car-side mr-1"></i> Garage</a>
                 <a href="#" onclick="navigateTo('fantasy')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-trophy mr-1"></i> Fantasy</a>
                 <a href="#" onclick="navigateTo('ai')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-brain mr-1"></i> AI Hub</a>
                 <a href="#" onclick="navigateTo('shop')" class="nav-link hover:text-white transition-colors py-1 relative"><i class="fa-solid fa-shopping-bag mr-1"></i> Shop</a>
@@ -157,9 +151,10 @@
             <!-- Sound profile & Mute Selectors -->
             <div class="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5 text-xs">
                 <select id="sound-profile-select" onchange="changeSoundProfile(this.value)" class="bg-transparent border-none text-gray-400 font-f1 text-[9px] outline-none cursor-pointer">
-                    <option value="aggressive">Aggressive Engine</option>
-                    <option value="stealth">Stealth Electric</option>
-                    <option value="cinematic">Cinematic V10</option>
+                    <option value="v8">Aggressive V8</option>
+                    <option value="v10">Classic V10</option>
+                    <option value="v12">Screaming V12</option>
+                    <option value="electric">Stealth Electric</option>
                 </select>
                 <button onclick="toggleSound()" class="text-gray-400 hover:text-white ml-2">
                     <i id="volume-icon" data-lucide="volume-2" class="w-4 h-4"></i>
@@ -183,7 +178,7 @@
             
             <div id="user-profile-badge" class="hidden flex items-center gap-3">
                 <div class="flex flex-col text-right">
-                    <span id="user-badge-name" class="font-f1 text-[11px] font-semibold text-white">Driver #44</span>
+                    <span id="user-badge-name" class="font-f1 text-[11px] font-semibold text-white">Driver #01</span>
                     <span id="user-badge-xp" class="text-[8px] text-f1-gold tracking-wider font-mono">100 XP (Rookie)</span>
                 </div>
                 <!-- Profile Frame Badge Container -->
@@ -201,6 +196,36 @@
             </button>
         </div>
     </nav>
+    <!-- F1 Live GP Session Tracker Sub-bar -->
+    <div class="f1-session-tracker">
+        <div class="f1-session-title">
+            <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse inline-block"></span>
+            LIVE: Monaco Grand Prix
+        </div>
+        <span class="w-[1px] h-3 bg-white/10 hidden sm:inline-block"></span>
+        <div class="f1-session-items-wrapper">
+            <div class="f1-session-item">
+                <span class="f1-session-item-name">Practice 1</span>
+                <span class="f1-session-item-time">FRI 11:30</span>
+                <span class="f1-session-status finished">Finished</span>
+            </div>
+            <div class="f1-session-item">
+                <span class="f1-session-item-name">Practice 2</span>
+                <span class="f1-session-item-time">FRI 15:00</span>
+                <span class="f1-session-status finished">Finished</span>
+            </div>
+            <div class="f1-session-item">
+                <span class="f1-session-item-name">Qualifying</span>
+                <span class="f1-session-item-time">SAT 14:00</span>
+                <span class="f1-session-status upcoming">Saturday</span>
+            </div>
+            <div class="f1-session-item">
+                <span class="f1-session-item-name">Grand Prix</span>
+                <span class="f1-session-item-time">SUN 13:00</span>
+                <span class="f1-session-status upcoming">Sunday</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Content Sections -->
     <main class="relative min-h-[calc(100vh-80px)] w-full py-8 px-6 max-w-7xl mx-auto overflow-hidden">
@@ -208,20 +233,20 @@
         <!-- ================= HOME PAGE ================= -->
         <div id="page-home" class="page-container active-page space-y-12">
             <!-- Cinematic full-screen hero -->
-            <div class="relative rounded-2xl overflow-hidden min-h-[420px] flex items-center p-8 border border-white/5 bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(5,5,8,0.95) 40%, rgba(5,5,8,0.3) 100%), url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=1200');">
+            <div class="relative rounded-sm overflow-hidden min-h-[420px] flex items-center p-8 border border-white/5 bg-cover bg-center" style="background-image: linear-gradient(to right, rgba(12,12,18,0.95) 40%, rgba(12,12,18,0.3) 100%), url('https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=1200');">
                 <div class="max-w-xl space-y-6 relative z-10">
-                    <div class="inline-flex items-center gap-2 bg-f1-red/10 border border-f1-red/20 text-f1-red px-3 py-1 rounded-full font-f1 text-[10px] tracking-wider uppercase animate-pulse">
+                    <div class="inline-flex items-center gap-2 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] px-3 py-1 rounded-sm font-f1 text-[10px] tracking-wider uppercase animate-pulse">
                         <i data-lucide="activity" class="w-3 h-3"></i> LIVE GP OPERATIONS ACTIVE
                     </div>
                     <h2 class="font-f1 text-5xl font-black leading-tight tracking-wider text-white">
                         THE ULTIMATE <br>
-                        <span class="text-f1-red text-neon-glow">F1VERSE DIGITAL HUBS</span>
+                        <span class="text-[var(--primary)] italic uppercase">F1VERSE DIGITAL HUBS</span>
                     </h2>
-                    <p class="text-gray-400 text-xs leading-relaxed">
+                    <p class="text-gray-400 text-xs leading-relaxed font-body">
                         Step inside the carbon fiber simulator. Sign elite sponsor contracts, explore 3D aerodynamics, buy glowing visual frames, recalculate seasons with AI, and track your metrics.
                     </p>
                     <div class="flex gap-4">
-                        <button onclick="navigateTo('academy')" class="glass-button px-6 py-2.5 bg-f1-red border border-f1-red text-[10px]">Driver Academy</button>
+                        <button onclick="navigateTo('academy')" class="glass-button px-6 py-2.5 bg-[var(--primary)] border border-[var(--primary)] text-[10px]">Driver Academy</button>
                         <button onclick="navigateTo('garage')" class="glass-button px-6 py-2.5 bg-transparent border border-white/10 hover:border-white text-[10px]">3D F1 Garage</button>
                     </div>
                 </div>
@@ -230,29 +255,29 @@
             <!-- GP Countdown & Standing charts -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- GP Countdown -->
-                <div class="glass-panel p-6 flex flex-col justify-between border-t-4 border-f1-red space-y-6">
+                <div class="glass-panel p-6 flex flex-col justify-between border-t-4 border-[var(--primary)] space-y-6 rounded-sm">
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="telemetry-label">NEXT ROUND CALENDAR</span>
-                            <h3 class="font-f1 text-base font-bold mt-1 text-white">MONACO GRAND PRIX</h3>
+                            <span class="telemetry-label font-bold text-[9px] text-[var(--primary)]">NEXT ROUND CALENDAR</span>
+                            <h3 class="font-f1 text-base font-black italic mt-1 text-white">MONACO GRAND PRIX</h3>
                         </div>
-                        <i data-lucide="calendar" class="w-5 h-5 text-f1-red"></i>
+                        <i data-lucide="calendar" class="w-5 h-5 text-[var(--primary)]"></i>
                     </div>
                     
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                    <div class="grid grid-cols-4 gap-2 text-center font-mono">
+                        <div class="bg-[#161622] p-2 rounded-sm border border-white/5">
                             <span id="days" class="font-f1 text-xl font-black text-white">03</span>
                             <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">DAYS</div>
                         </div>
-                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                        <div class="bg-[#161622] p-2 rounded-sm border border-white/5">
                             <span id="hours" class="font-f1 text-xl font-black text-white">12</span>
                             <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">HRS</div>
                         </div>
-                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                        <div class="bg-[#161622] p-2 rounded-sm border border-white/5">
                             <span id="minutes" class="font-f1 text-xl font-black text-white">45</span>
                             <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">MINS</div>
                         </div>
-                        <div class="bg-black/40 p-2 rounded border border-white/5">
+                        <div class="bg-[#161622] p-2 rounded-sm border border-white/5">
                             <span id="seconds" class="font-f1 text-xl font-black text-white">20</span>
                             <div class="text-[7px] text-gray-500 uppercase tracking-wider mt-1">SECS</div>
                         </div>
