@@ -104,7 +104,7 @@ let audioCtx = null;
 let engineOsc = null;
 let engineGain = null;
 let noiseFilter = null;
-let soundProfile = "aggressive"; // "aggressive", "stealth", "cinematic"
+let soundProfile = "v8"; // "v8", "v10", "v12", "electric"
 let isSoundMuted = false;
 
 function initAudioEngine() {
@@ -136,22 +136,26 @@ function initAudioEngine() {
 function updateEngineRPM(rpm) {
     if (!audioCtx || isSoundMuted) return;
     
-    let baseFreq = 80;
-    let freqMultiplier = 770;
+    let baseFreq = 65;
+    let freqMultiplier = 500;
     
     // Shift parameters based on sound profile
-    if (soundProfile === 'stealth') {
-        engineOsc.type = 'sine';
-        baseFreq = 60;
-        freqMultiplier = 350;
-    } else if (soundProfile === 'cinematic') {
-        engineOsc.type = 'triangle';
-        baseFreq = 100;
-        freqMultiplier = 900;
-    } else {
+    if (soundProfile === 'v10') {
         engineOsc.type = 'sawtooth';
-        baseFreq = 80;
-        freqMultiplier = 770;
+        baseFreq = 90;
+        freqMultiplier = 950;
+    } else if (soundProfile === 'v12') {
+        engineOsc.type = 'sawtooth';
+        baseFreq = 120;
+        freqMultiplier = 1300;
+    } else if (soundProfile === 'electric') {
+        engineOsc.type = 'sine';
+        baseFreq = 50;
+        freqMultiplier = 250;
+    } else { // default v8
+        engineOsc.type = 'sawtooth';
+        baseFreq = 65;
+        freqMultiplier = 500;
     }
     
     const targetFreq = baseFreq + (rpm / 15000) * freqMultiplier;
