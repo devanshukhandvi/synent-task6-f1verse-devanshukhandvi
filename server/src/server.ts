@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import Razorpay from 'razorpay';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -39,6 +40,21 @@ const courseSchema = new mongoose.Schema({
 
 const Course = mongoose.model('Course', courseSchema);
 
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, default: 'student' },
+  xp: { type: Number, default: 100 },
+  coins: { type: Number, default: 1000 },
+  rank: { type: String, default: 'Rookie' },
+  enrolledCourses: [{ courseId: String, progress: Number }],
+  purchasedFrames: [String],
+  activeDecals: [String]
+});
+
+const User = mongoose.model('User', userSchema);
+
 // JWT Middleware helper
 interface AuthRequest extends Request {
   user?: any;
@@ -62,29 +78,81 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
 // 1. JWT Authentication
 app.post('/api/auth/signup', async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'All telemetry profile keys required (username, email, password)' });
+  }
   try {
-    // Generate simulated token
-    const token = jwt.sign({ username, role: 'student' }, process.env.JWT_SECRET || 'F1_SECRET_KEY', { expiresIn: '24h' });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Callsign or email registration conflict' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role: username.toLowerCase() === 'admin' ? 'admin' : 'student',
+      rank: username.toLowerCase() === 'admin' ? 'Legend' : 'Rookie'
+    });
+    await newUser.save();
+    
+    const token = jwt.sign({ username: newUser.username, role: newUser.role }, process.env.JWT_SECRET || 'F1_SECRET_KEY', { expiresIn: '24h' });
     res.status(201).json({
       message: 'Driver profile registered successfully',
       token,
-      user: { username, email, role: 'student', xp: 100, coins: 1000 }
+      user: {
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        xp: newUser.xp,
+        coins: newUser.coins,
+        rank: newUser.rank,
+        enrolledCourses: newUser.enrolledCourses,
+        purchasedFrames: newUser.purchasedFrames,
+        activeDecals: newUser.activeDecals
+      }
     });
   } catch (e) {
-    res.status(500).json({ message: 'Auth database error' });
+    console.error(e);
+    res.status(500).json({ message: 'Auth database registration failure' });
   }
 });
 
-app.post('/api/auth/login', (req: Request, res: Response) => {
-  const { username } = req.body;
-  const role = username.toLowerCase() === 'admin' ? 'admin' : 'student';
-  const token = jwt.sign({ username, role }, process.env.JWT_SECRET || 'F1_SECRET_KEY', { expiresIn: '24h' });
-  
-  res.json({
-    message: 'JWT verification completed successfully',
-    token,
-    user: { username, role, xp: role === 'admin' ? 9999 : 150 }
-  });
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Callsign signature and password parameters required' });
+  }
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(401).json({ message: 'Driver profile not registered' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Authentication passkey mismatch' });
+    }
+    
+    const token = jwt.sign({ username: user.username, role: user.role }, process.env.JWT_SECRET || 'F1_SECRET_KEY', { expiresIn: '24h' });
+    res.json({
+      message: 'JWT verification completed successfully',
+      token,
+      user: {
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        xp: user.xp,
+        coins: user.coins,
+        rank: user.rank,
+        enrolledCourses: user.enrolledCourses,
+        purchasedFrames: user.purchasedFrames,
+        activeDecals: user.activeDecals
+      }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Auth database validation failure' });
+  }
 });
 
 // 2. Razorpay Order Creation
